@@ -60,8 +60,9 @@ public class FileTransferHandler implements FileTransfer.Iface {
 
     /**
      * Override sendDataChunk for the Handler
+     *
      * @param chunk the DataChunk
-     * @throws TException 
+     * @throws TException
      */
     @Override
     public void sendDataChunk(DataChunk chunk) throws TException {
@@ -70,19 +71,19 @@ public class FileTransferHandler implements FileTransfer.Iface {
             System.err.println("Metadata hasn't arrived");
         }
 
-        boolean append = false; // Disable appending mode of FileOutputStream
-        try {
-            System.out.println("Received the chunk with offset: " + chunk.offset);
-            this.dataStore.get(chunk.srcPath).add(chunk);
+        // Disable appending mode of FileOutputStream
+        boolean append = false;
+        // Add the new chunk to the list
+        this.dataStore.get(chunk.srcPath).add(chunk);
 
-            // Get the buffer size of avaiable data of the file
-            System.out.println("Begin check sum");
-            int bufferSize = 0;
-            for (int i = 0; i < this.dataStore.get(chunk.srcPath).size(); ++i) {
-                ByteBuffer tmpBuffer = this.dataStore.get(chunk.srcPath).get(i).buffer;
-                bufferSize += tmpBuffer.limit() - tmpBuffer.position();
-            }
-            
+        // Get the total size of avaiable data chunks of the file
+        int bufferSize = 0;
+        for (int i = 0; i < this.dataStore.get(chunk.srcPath).size(); ++i) {
+            ByteBuffer tmpBuffer = this.dataStore.get(chunk.srcPath).get(i).buffer;
+            bufferSize += tmpBuffer.limit() - tmpBuffer.position();
+        }
+
+        try {
             // Check sum of the file
             ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             if (this.checkSum(chunk, buffer)) {
@@ -90,10 +91,11 @@ public class FileTransferHandler implements FileTransfer.Iface {
                 System.out.println("Sum checked");
                 File file = new File(this.headerList.get(chunk.srcPath).desPath);
                 try (FileChannel writeChannel = new FileOutputStream(file, append).getChannel()) {
-                    System.out.println(buffer.toString());
                     writeChannel.write(buffer);
                     System.out.println("Wrote to file: " + this.headerList.get(chunk.srcPath).desPath);
                 }
+                this.headerList.remove(chunk.srcPath);
+                this.dataStore.remove(chunk.srcPath);
             }
         } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -102,10 +104,12 @@ public class FileTransferHandler implements FileTransfer.Iface {
 
     /**
      * Check sum of the file given a new data chunk
+     *
      * @param chunk new arriving data chunk
      * @param buffer ByteBuffer of the file
-     * @return boolean: true if match the checksum in the metadata, otherwise, false
-     * @throws NoSuchAlgorithmException 
+     * @return boolean: true if match the checksum in the metadata, otherwise,
+     * false
+     * @throws NoSuchAlgorithmException
      */
     public boolean checkSum(DataChunk chunk, ByteBuffer buffer) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA1");
@@ -113,17 +117,9 @@ public class FileTransferHandler implements FileTransfer.Iface {
 
         // Transfer bytes from sent data chunks into the ByteBuffer
         for (int i = 0; i < chunkArray.size(); ++i) {
-            // Initialize the byte array to concatenation
             int chunkBufferSize = chunkArray.get(i).buffer.limit() - chunkArray.get(i).buffer.position();
-            byte[] byteArray = new byte[chunkBufferSize];
-            chunkArray.get(i).buffer.get(byteArray, 0, chunkBufferSize);
-            
-            // Transfer bytes to the result buffer
             buffer.position(fileTransferConstants.CHUNK_MAX_SIZE * chunkArray.get(i).offset);
-            buffer.put(byteArray, 0, chunkBufferSize);
-            
-            // Reset the position of the ith chunk's ByteBuffer 
-            chunkArray.get(i).buffer.position(chunkArray.get(i).buffer.position() - chunkBufferSize);
+            buffer.put(chunkArray.get(i).buffer.array(), chunkArray.get(i).buffer.position(), chunkBufferSize);
         }
 
         if (buffer.position() < buffer.limit()) {
@@ -137,7 +133,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
         for (int i = 0; i < mdByteArray.length; i++) {
             builder.append(Integer.toString((mdByteArray[i] & 0xff) + 0x100, 16).substring(1));
         }
-        
+
         return builder.toString().equals(this.headerList.get(chunk.srcPath).checkSum);
     }
 }

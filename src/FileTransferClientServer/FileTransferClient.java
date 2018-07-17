@@ -80,24 +80,25 @@ public class FileTransferClient {
             client.sendMetaData(fileMeta);
 
             // Parse the file into smaller chunks and send them
+            byte[] bufferByteArray = buffer.array();
             while (offset < numberOfChunks) {
-                byte[] byteChunkArray;
                 ByteBuffer byteChunk;
-                if ((buffer.limit() - buffer.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
-                    int subSize = buffer.limit() - buffer.position();
-                    byteChunkArray = new byte[subSize];
-                    buffer.get(byteChunkArray, 0, subSize);
+                if ((buffer.limit() - offset * fileTransferConstants.CHUNK_MAX_SIZE) < fileTransferConstants.CHUNK_MAX_SIZE) {
+                    int subSize = buffer.limit() - offset * fileTransferConstants.CHUNK_MAX_SIZE;
                     byteChunk = ByteBuffer.allocate(subSize);
+                    byteChunk.put(bufferByteArray, offset * fileTransferConstants.CHUNK_MAX_SIZE, subSize);
                 } else {
-                    byteChunkArray = new byte[fileTransferConstants.CHUNK_MAX_SIZE];
-                    buffer.get(byteChunkArray, 0, fileTransferConstants.CHUNK_MAX_SIZE);
                     byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+                    byteChunk.put(bufferByteArray, offset * fileTransferConstants.CHUNK_MAX_SIZE, fileTransferConstants.CHUNK_MAX_SIZE);
                 }
-                byteChunk.put(byteChunkArray);
+                
+                // Ensure exist no extra unused bytes
                 if (byteChunk.position() < byteChunk.limit()) {
                     byteChunk.limit(byteChunk.position());
                 }
                 byteChunk.rewind();
+                
+                // Create a data chunk and send it
                 DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
                 client.sendDataChunk(chunk);
             }

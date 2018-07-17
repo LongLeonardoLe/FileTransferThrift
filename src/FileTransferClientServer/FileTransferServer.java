@@ -48,14 +48,14 @@ public class FileTransferServer {
         try {
             handler = new FileTransferHandler();
             processor = new FileTransfer.Processor(handler);
-            
+
             // Starting a nonblocking server
             TNonblockingServerSocket socket = new TNonblockingServerSocket(9090);
             TNonblockingServer.Args args = new TNonblockingServer.Args(socket);
             args.protocolFactory(new TBinaryProtocol.Factory());
             args.transportFactory(new TFramedTransport.Factory());
             args.processorFactory(new TProcessorFactory(processor));
-            
+
             TServer server = new TNonblockingServer(args);
             System.out.println("Starting a nonblocking server...");
             server.serve();
