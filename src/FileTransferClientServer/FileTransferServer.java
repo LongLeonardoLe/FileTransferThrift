@@ -24,6 +24,8 @@
 package FileTransferClientServer;
 
 import FileTransfer.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TNonblockingServer;
@@ -44,13 +46,13 @@ public class FileTransferServer {
     public static FileTransfer.Processor processor;
 
     public static void main(String[] argv) {
+        handler = new FileTransferHandler();
+        processor = new FileTransfer.Processor(handler);
 
+        // Starting a nonblocking server
+        TNonblockingServerSocket socket;
         try {
-            handler = new FileTransferHandler();
-            processor = new FileTransfer.Processor(handler);
-
-            // Starting a nonblocking server
-            TNonblockingServerSocket socket = new TNonblockingServerSocket(9090);
+            socket = new TNonblockingServerSocket(9090);
             TNonblockingServer.Args args = new TNonblockingServer.Args(socket);
             args.protocolFactory(new TBinaryProtocol.Factory());
             args.transportFactory(new TFramedTransport.Factory());
@@ -60,8 +62,8 @@ public class FileTransferServer {
             System.out.println("Starting a nonblocking server...");
             server.serve();
 
-        } catch (TTransportException e) {
-            e.printStackTrace();
+        } catch (TTransportException ex) {
+            Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

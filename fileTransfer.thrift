@@ -11,7 +11,7 @@ const i32 CHUNK_MAX_SIZE = 2048; // the maximum size allowed in 1 data chunk
 struct Metadata {
    1: required string srcPath;
    2: required string desPath;
-   3: required string checkSum;
+   3: required i64 checkSum;
    4: optional i32 size;
 }
 
@@ -27,5 +27,6 @@ struct DataChunk {
 
 service FileTransfer {
     oneway void sendMetaData(1: Metadata header),
-    oneway void sendDataChunk(1: DataChunk chunk)
+    oneway void sendDataChunk(1: DataChunk chunk),
+    void updateChecksum(1: string srcPath, 2: i64 checkSum)
 }
