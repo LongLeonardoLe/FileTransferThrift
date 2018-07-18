@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TNonblockingServer;
+import org.apache.thrift.server.THsHaServer;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -53,12 +54,12 @@ public class FileTransferServer {
         TNonblockingServerSocket socket;
         try {
             socket = new TNonblockingServerSocket(9090);
-            TNonblockingServer.Args args = new TNonblockingServer.Args(socket);
+            THsHaServer.Args args = new THsHaServer.Args(socket);
             args.protocolFactory(new TBinaryProtocol.Factory());
             args.transportFactory(new TFramedTransport.Factory());
             args.processorFactory(new TProcessorFactory(processor));
 
-            TServer server = new TNonblockingServer(args);
+            TServer server = new THsHaServer(args);
             System.out.println("Starting a nonblocking server...");
             server.serve();
 

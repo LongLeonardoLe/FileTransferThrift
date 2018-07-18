@@ -28,5 +28,5 @@ struct DataChunk {
 service FileTransfer {
     oneway void sendMetaData(1: Metadata header),
     oneway void sendDataChunk(1: DataChunk chunk),
-    void updateChecksum(1: string srcPath, 2: i64 checkSum)
+    oneway void updateChecksum(1: string srcPath, 2: i64 checkSum)
 }
