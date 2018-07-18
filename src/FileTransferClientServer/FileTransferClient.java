@@ -63,7 +63,7 @@ public class FileTransferClient {
         int offset = 0;
         // Obtain the number of data chunks from the file
         long numberOfChunks = (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
-
+        
         // Try to open and read the file 
         try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
             // Create the metadata and send it
@@ -81,7 +81,7 @@ public class FileTransferClient {
                 }
                 readChannel.read(byteChunk);
 
-                // Get rid of extra unused bytes if there is any
+                // Get rid of unused bytes
                 if (byteChunk.position() < byteChunk.limit()) {
                     byteChunk.limit(byteChunk.position());
                 }
