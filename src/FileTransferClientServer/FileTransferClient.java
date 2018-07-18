@@ -57,7 +57,7 @@ public class FileTransferClient {
      * @param desPath path to the destination file
      * @throws TException
      */
-    public static void sendFile(FileTransfer.Client[] clients, String srcPath, String desPath) throws TException {
+    public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
         Adler32 checkSumGen = new Adler32();
         File inputFile = new File(srcPath);
         int offset = 0;
@@ -68,36 +68,35 @@ public class FileTransferClient {
         try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
             // Create the metadata and send it
             Metadata fileMeta = new Metadata(srcPath, desPath, 0);
-            clients[(int) (Math.random() * clients.length)].sendMetaData(fileMeta);
+            client.sendMetaData(fileMeta);
 
             // Parse the file into smaller chunks and send them
             while (offset < numberOfChunks) {
-                for (int i = 0; i < clients.length; ++i) {
-                    // Allocate the ByteBuffer to which bytes is transferred to
-                    ByteBuffer byteChunk;
-                    if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
-                        byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
-                    } else {
-                        byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
-                    }
-                    readChannel.read(byteChunk);
-
-                    // Get rid of unused bytes
-                    if (byteChunk.position() < byteChunk.limit()) {
-                        byteChunk.limit(byteChunk.position());
-                    }
-                    byteChunk.rewind();
-
-                    // Update the checksum
-                    checkSumGen.update(byteChunk);
-                    byteChunk.rewind();
-
-                    // Create a data chunk and send it
-                    DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
-                    clients[i].sendDataChunk(chunk);
+                // Allocate the ByteBuffer to which bytes is transferred to
+                ByteBuffer byteChunk;
+                if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
+                    byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
+                } else {
+                    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
                 }
+                readChannel.read(byteChunk);
+
+                // Get rid of unused bytes
+                if (byteChunk.position() < byteChunk.limit()) {
+                    byteChunk.limit(byteChunk.position());
+                }
+                byteChunk.rewind();
+
+                // Update the checksum
+                checkSumGen.update(byteChunk);
+                byteChunk.rewind();
+
+                // Create a data chunk and send it
+                DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
+                client.sendDataChunk(chunk);
             }
-            clients[(int) (Math.random() * clients.length)].updateChecksum(srcPath, checkSumGen.getValue());
+
+            client.updateChecksum(srcPath, checkSumGen.getValue());
             readChannel.close();
 
         } catch (IOException ex) {
@@ -105,31 +104,29 @@ public class FileTransferClient {
         }
     }
 
+    public static Thread createThread(int port, String srcPath, String desPath) {
+        return new Thread(() -> {
+            TTransport transport;
+            transport = new TFramedTransport(new TSocket("localhost", port));
+            TProtocol protocol = new TBinaryProtocol(transport);
+            FileTransfer.Client client = new FileTransfer.Client(protocol);
+            try {
+                transport.open();
+                sendFile(client, srcPath, desPath);
+            } catch (TException ex) {
+                Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, srcPath, ex);
+            }
+        });
+    }
+
     public static void main(String[] argv) throws IOException {
-        TTransport transport;
-        transport = new TFramedTransport(new TSocket("localhost", 9090));
-        TProtocol protocol = new TBinaryProtocol(transport);
-
-        int numClients = 4;
-        FileTransfer.Client[] clients = new FileTransfer.Client[numClients];
-        for (int i = 0; i < clients.length; ++i) {
-            clients[i] = new FileTransfer.Client(protocol);
-        }
-
-        try {
-            transport.open();
-            System.out.println("Starting client, sending data...");
-            long startTime = System.nanoTime();
-            sendFile(clients, "/home/cpu10360/Desktop/image.jpg", "/home/cpu10360/Desktop/test.jpg");
-            sendFile(clients, "/home/cpu10360/Desktop/image1.jpg", "/home/cpu10360/Desktop/test1.jpg");
-            sendFile(clients, "/home/cpu10360/Desktop/image2.jpg", "/home/cpu10360/Desktop/test2.jpg");
-            sendFile(clients, "/home/cpu10360/Desktop/image3.jpg", "/home/cpu10360/Desktop/test3.jpg");
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime) / 1000000;
-            System.out.println(" [x] Data sent in 0." + duration + " seconds.");
-        } catch (TException ex) {
-            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        transport.close();
+        long startTime = System.nanoTime();
+        createThread(9090, "/home/cpu10360/Desktop/image.jpg", "/home/cpu10360/Desktop/test.jpg").start();
+        createThread(9091, "/home/cpu10360/Desktop/image1.jpg", "/home/cpu10360/Desktop/test1.jpg").start();
+        createThread(9092, "/home/cpu10360/Desktop/image2.jpg", "/home/cpu10360/Desktop/test2.jpg").start();
+        createThread(9093, "/home/cpu10360/Desktop/image3.jpg", "/home/cpu10360/Desktop/test3.jpg").start();
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1000000;
+        System.out.println(" [x] Data sent in 0." + duration + " seconds.");
     }
 }

@@ -24,6 +24,7 @@
 package FileTransferClientServer;
 
 import FileTransfer.*;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,29 +43,30 @@ import org.apache.thrift.transport.TTransportException;
  */
 public class FileTransferServer {
 
-    public static FileTransferHandler handler;
-
-    public static FileTransfer.Processor processor;
+    public static Thread createThread(int port) {
+        return new Thread(() -> {
+            FileTransferHandler handler = new FileTransferHandler();
+            FileTransfer.Processor processor = new FileTransfer.Processor(handler);
+            try {
+                TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
+                THsHaServer.Args args = new THsHaServer.Args(socket);
+                args.protocolFactory(new TBinaryProtocol.Factory());
+                args.transportFactory(new TFramedTransport.Factory());
+                args.processorFactory(new TProcessorFactory(processor));
+                
+                TServer server = new THsHaServer(args);
+                server.serve();
+                
+            } catch (TTransportException ex) {
+                Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
 
     public static void main(String[] argv) {
-        handler = new FileTransferHandler();
-        processor = new FileTransfer.Processor(handler);
-
-        // Starting a nonblocking server
-        TNonblockingServerSocket socket;
-        try {
-            socket = new TNonblockingServerSocket(9090);
-            THsHaServer.Args args = new THsHaServer.Args(socket);
-            args.protocolFactory(new TBinaryProtocol.Factory());
-            args.transportFactory(new TFramedTransport.Factory());
-            args.processorFactory(new TProcessorFactory(processor));
-
-            TServer server = new THsHaServer(args);
-            System.out.println("Starting a nonblocking server...");
-            server.serve();
-
-        } catch (TTransportException ex) {
-            Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        createThread(9090).start();
+        createThread(9091).start();
+        createThread(9092).start();
+        createThread(9093).start();
     }
 }
