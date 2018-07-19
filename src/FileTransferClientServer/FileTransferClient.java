@@ -36,6 +36,7 @@ import java.nio.channels.FileChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
+import java.util.Arrays;
 
 import FileTransfer.*;
 import java.io.IOException;
@@ -104,7 +105,7 @@ public class FileTransferClient {
         }
     }
 
-    public static Thread createThread(int port, String srcPath, String desPath) {
+    public static Thread createThread(int port, String dirPath, File[] paths) {
         return new Thread(() -> {
             TTransport transport;
             transport = new TFramedTransport(new TSocket("localhost", port));
@@ -112,19 +113,27 @@ public class FileTransferClient {
             FileTransfer.Client client = new FileTransfer.Client(protocol);
             try {
                 transport.open();
-                sendFile(client, srcPath, desPath);
+                for (int i = 0; i < paths.length; ++i) {
+                    String srcPath = new StringBuilder().append(dirPath).append('/').append(paths[i].getName()).toString();
+                    String desPath = new StringBuilder().append("/home/cpu10360/Desktop/").append("des/").append(paths[i].getName()).toString();
+                    sendFile(client, srcPath, desPath);
+                }
             } catch (TException ex) {
-                Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, srcPath, ex);
+                Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }
 
     public static void main(String[] argv) throws IOException {
+        File directory = new File("/home/cpu10360/Desktop/src/");
+        File[] files = directory.listFiles();
+        int port = 9000;
+        int numOfClients = 16;
         long startTime = System.nanoTime();
-        createThread(9090, "/home/cpu10360/Desktop/image.jpg", "/home/cpu10360/Desktop/test.jpg").start();
-        createThread(9091, "/home/cpu10360/Desktop/image1.jpg", "/home/cpu10360/Desktop/test1.jpg").start();
-        createThread(9092, "/home/cpu10360/Desktop/image2.jpg", "/home/cpu10360/Desktop/test2.jpg").start();
-        createThread(9093, "/home/cpu10360/Desktop/image3.jpg", "/home/cpu10360/Desktop/test3.jpg").start();
+        for (int i = 0; i < numOfClients; ++i) {
+            File[] paths = Arrays.copyOfRange(files, i * files.length / numOfClients, (i + 1) * files.length / numOfClients);
+            createThread(port++, directory.getAbsolutePath(), paths).start();
+        }
         long endTime = System.nanoTime();
         long duration = (endTime - startTime) / 1000000;
         System.out.println(" [x] Data sent in 0." + duration + " seconds.");

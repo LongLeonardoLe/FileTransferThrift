@@ -53,6 +53,7 @@ public class FileTransferServer {
                 args.protocolFactory(new TBinaryProtocol.Factory());
                 args.transportFactory(new TFramedTransport.Factory());
                 args.processorFactory(new TProcessorFactory(processor));
+                args.minWorkerThreads = 10;
                 
                 TServer server = new THsHaServer(args);
                 server.serve();
@@ -64,9 +65,10 @@ public class FileTransferServer {
     }
 
     public static void main(String[] argv) {
-        createThread(9090).start();
-        createThread(9091).start();
-        createThread(9092).start();
-        createThread(9093).start();
+        int numOfServers = 16;
+        int port = 9000;
+        for (int i = 0; i < numOfServers; ++i) {
+            createThread(port++).start();
+        }
     }
 }

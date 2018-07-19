@@ -50,7 +50,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
     private final HashMap<String, Metadata> headerList;
     
     // The storage for path names of data chunks on disk
-    private final HashMap<String, ArrayList<String>> fileNameList;
+    private final HashMap<String, ArrayList<File>> fileNameList;
 
     public FileTransferHandler() {
         this.headerList = new HashMap();
@@ -65,6 +65,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
      */
     @Override
     public void sendMetaData(Metadata header) throws TException {
+        System.out.println(System.nanoTime());
         System.out.println("Received header of src file: " + header.srcPath);
         // Add the metadata to the list
         if (!this.headerList.containsKey(header.srcPath)) {
@@ -107,9 +108,9 @@ public class FileTransferHandler implements FileTransfer.Iface {
             
             // Add the file name to fileNameList for accurate checksum update
             if (chunk.offset > this.fileNameList.get(chunk.srcPath).size()) {
-                this.fileNameList.get(chunk.srcPath).add(fileName);
+                this.fileNameList.get(chunk.srcPath).add(file);
             } else {
-                this.fileNameList.get(chunk.srcPath).add(chunk.offset, fileName);
+                this.fileNameList.get(chunk.srcPath).add(chunk.offset, file);
             }
             writeChannel.close();
         } catch (IOException ex) {
@@ -135,12 +136,8 @@ public class FileTransferHandler implements FileTransfer.Iface {
         boolean append = false;
 
         // Get the list of File for integration
-        String folderName = new StringBuilder().append("./tempData/").append(Integer.toString(srcPath.hashCode())).append('/').toString();
         File[] files = new File[this.fileNameList.get(srcPath).size()];
-        for (int i = 0; i < files.length; ++i) {
-            String fileName = new StringBuilder().append(folderName).append(this.fileNameList.get(srcPath).get(i)).toString();
-            files[i] = new File(fileName);
-        }
+        files = this.fileNameList.get(srcPath).toArray(files);
         
         // Allocate the buffer and check for integrity
         ByteBuffer buffer = ByteBuffer.allocate(files.length * fileTransferConstants.CHUNK_MAX_SIZE);
@@ -179,6 +176,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
             file.delete();
         }
         folder.delete();
+        System.out.println(System.nanoTime());
     }
 
     /**
@@ -190,7 +188,6 @@ public class FileTransferHandler implements FileTransfer.Iface {
      * @return boolean: true if match the checksum in the metadata, otherwise,
      * false
      * @throws java.io.IOException
-     * @throws NoSuchAlgorithmException
      */
     public boolean checkSum(String srcPath, File[] files, ByteBuffer buffer) throws IOException {
         Adler32 checkSumGen = new Adler32();
