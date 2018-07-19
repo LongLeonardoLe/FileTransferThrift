@@ -50,7 +50,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
     private final HashMap<String, Metadata> headerList;
     
     // The storage for path names of data chunks on disk
-    private final HashMap<String, ArrayList<String>> fileNameList;
+    private final HashMap<String, ArrayList<File>> fileNameList;
 
     public FileTransferHandler() {
         this.headerList = new HashMap();
@@ -107,9 +107,9 @@ public class FileTransferHandler implements FileTransfer.Iface {
             
             // Add the file name to fileNameList for accurate checksum update
             if (chunk.offset > this.fileNameList.get(chunk.srcPath).size()) {
-                this.fileNameList.get(chunk.srcPath).add(fileName);
+                this.fileNameList.get(chunk.srcPath).add(file);
             } else {
-                this.fileNameList.get(chunk.srcPath).add(chunk.offset, fileName);
+                this.fileNameList.get(chunk.srcPath).add(chunk.offset, file);
             }
             writeChannel.close();
         } catch (IOException ex) {
@@ -135,12 +135,8 @@ public class FileTransferHandler implements FileTransfer.Iface {
         boolean append = false;
 
         // Get the list of File for integration
-        String folderName = new StringBuilder().append("./tempData/").append(Integer.toString(srcPath.hashCode())).append('/').toString();
         File[] files = new File[this.fileNameList.get(srcPath).size()];
-        for (int i = 0; i < files.length; ++i) {
-            String fileName = new StringBuilder().append(folderName).append(this.fileNameList.get(srcPath).get(i)).toString();
-            files[i] = new File(fileName);
-        }
+        this.fileNameList.get(srcPath).toArray(files);
         
         // Allocate the buffer and check for integrity
         ByteBuffer buffer = ByteBuffer.allocate(files.length * fileTransferConstants.CHUNK_MAX_SIZE);

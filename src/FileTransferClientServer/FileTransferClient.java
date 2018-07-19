@@ -113,7 +113,7 @@ public class FileTransferClient {
             transport.open();
             System.out.println("Starting client, sending data...");
             long startTime = System.nanoTime();
-            sendFile(client, "/home/cpu10360/Desktop/image.jpg", "/home/cpu10360/Desktop/test.jpg");
+            sendFile(client, "/home/cpu10360/Desktop/image0.jpg", "/home/cpu10360/Desktop/test0.jpg");
             sendFile(client, "/home/cpu10360/Desktop/image1.jpg", "/home/cpu10360/Desktop/test1.jpg");
             sendFile(client, "/home/cpu10360/Desktop/image2.jpg", "/home/cpu10360/Desktop/test2.jpg");
             sendFile(client, "/home/cpu10360/Desktop/image3.jpg", "/home/cpu10360/Desktop/test3.jpg");
