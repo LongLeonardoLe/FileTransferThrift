@@ -29,6 +29,8 @@ import java.util.logging.Logger;
 
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.THsHaServer;
+import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -51,11 +53,10 @@ public class FileTransferServer {
                 args.protocolFactory(new TBinaryProtocol.Factory());
                 args.transportFactory(new TFramedTransport.Factory());
                 args.processorFactory(new TProcessorFactory(processor));
-                args.minWorkerThreads = 10;
-
+                
                 TServer server = new THsHaServer(args);
                 server.serve();
-
+                
             } catch (TTransportException ex) {
                 Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -63,7 +64,7 @@ public class FileTransferServer {
     }
 
     public static void main(String[] argv) {
-        int numOfServers = 16;
+        int numOfServers = 4;
         int port = 9000;
         for (int i = 0; i < numOfServers; ++i) {
             createThread(port++).start();

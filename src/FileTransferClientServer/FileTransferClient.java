@@ -31,6 +31,7 @@ import org.apache.thrift.protocol.TProtocol;
 
 import java.io.FileInputStream;
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
@@ -59,47 +60,40 @@ public class FileTransferClient {
      * @throws TException
      */
     public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
-        Adler32 checkSumGen = new Adler32();
+        //Adler32 checkSumGen = new Adler32();
         File inputFile = new File(srcPath);
         int offset = 0;
         // Obtain the number of data chunks from the file
         int numberOfChunks = (int) (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
 
         // Try to open and read the file 
-        try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
+        try (FileInputStream readChannel = new FileInputStream(inputFile)) {
             // Create the metadata and send it
             Metadata fileMeta = new Metadata(srcPath, desPath, 0, numberOfChunks);
             client.sendMetaData(fileMeta);
 
             // Parse the file into smaller chunks and send them
-            while (offset < numberOfChunks) {
+            do {
                 // Allocate the ByteBuffer to which bytes is transferred to
-                ByteBuffer byteChunk;
-                if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
-                    byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
+                
+                byte[] byteChunk;
+                if (readChannel.available() < fileTransferConstants.CHUNK_MAX_SIZE) {
+                    byteChunk = new byte[readChannel.available()];
                 } else {
-                    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+                    byteChunk = new byte[fileTransferConstants.CHUNK_MAX_SIZE];
                 }
-                readChannel.read(byteChunk);
-
-                // Get rid of unused bytes
-                if (byteChunk.position() < byteChunk.limit()) {
-                    byteChunk.limit(byteChunk.position());
-                }
-                byteChunk.rewind();
 
                 // Update the checksum
-                checkSumGen.update(byteChunk);
+                /*checkSumGen.update(byteChunk);
                 byteChunk.rewind();
                 if ((offset + 1) == numberOfChunks) {
                     client.updateChecksum(srcPath, checkSumGen.getValue());
-                }
-
+                }*/
+                
                 // Create a data chunk and send it
-                DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
+                DataChunk chunk = new DataChunk(srcPath, ByteBuffer.wrap(byteChunk), offset++);
                 client.sendDataChunk(chunk);
-            }
-            //client.updateChecksum(srcPath, checkSumGen.getValue());
+            } while (offset < numberOfChunks);
             readChannel.close();
 
         } catch (IOException ex) {
@@ -130,14 +124,11 @@ public class FileTransferClient {
         File directory = new File("/home/cpu10360/Desktop/src/");
         File[] files = directory.listFiles();
         int port = 9000;
-        int numOfClients = 16;
-        long startTime = System.nanoTime();
+        int numOfClients = 4;
         for (int i = 0; i < numOfClients; ++i) {
             File[] paths = Arrays.copyOfRange(files, i * files.length / numOfClients, (i + 1) * files.length / numOfClients);
+            System.out.println(paths.length);
             createThread(port++, directory.getAbsolutePath(), paths).start();
         }
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime) / 1000000;
-        System.out.println(" [x] Data sent in 0." + duration + " seconds.");
     }
 }

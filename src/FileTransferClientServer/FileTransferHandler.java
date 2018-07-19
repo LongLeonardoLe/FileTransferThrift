@@ -50,11 +50,11 @@ public class FileTransferHandler implements FileTransfer.Iface {
     private final HashMap<String, Metadata> headerList;
 
     // The storage for path names of data chunks on disk
-    private final HashMap<String, Integer> countRecords;
+    //private final HashMap<String, Integer> countRecords;
 
     public FileTransferHandler() {
         this.headerList = new HashMap();
-        this.countRecords = new HashMap();
+        //this.countRecords = new HashMap();
     }
 
     /**
@@ -69,7 +69,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
         // Add the metadata to the list
         if (!this.headerList.containsKey(header.srcPath)) {
             this.headerList.put(header.srcPath, header);
-            this.countRecords.put(header.srcPath, 0);
+            //this.countRecords.put(header.srcPath, 0);
         }
     }
 
@@ -87,8 +87,8 @@ public class FileTransferHandler implements FileTransfer.Iface {
 
         boolean append = chunk.offset != 0;
         try {
-            this.countRecords.put(chunk.srcPath, this.countRecords.get(chunk.srcPath) + 1);
-            this.writeToFile(chunk.srcPath, chunk.buffer, append);
+            //this.countRecords.put(chunk.srcPath, this.countRecords.get(chunk.srcPath) + 1);
+            this.writeToFile(this.headerList.get(chunk.srcPath).desPath, chunk.buffer, append);
         } catch (IOException ex) {
             Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -114,19 +114,19 @@ public class FileTransferHandler implements FileTransfer.Iface {
     /**
      * Write the buffer to file
      *
-     * @param srcPath the origin of being-written file
+     * @param desPath the destination path of the being-written file
      * @param buffer bytes to be written
      * @param append appending mode
      * @throws IOException
      */
-    public void writeToFile(String srcPath, ByteBuffer buffer, boolean append) throws IOException {
+    public void writeToFile(String desPath, ByteBuffer buffer, boolean append) throws IOException {
         // Write output to file
-        File outputFile = new File(this.headerList.get(srcPath).desPath);
-        try (FileChannel writeChannel = new FileOutputStream(outputFile, append).getChannel()) {
-            writeChannel.write(buffer);
+        File outputFile = new File(desPath);
+        try (FileOutputStream writeChannel = new FileOutputStream(outputFile, append)) {
+            writeChannel.write(buffer.array());
             writeChannel.close();
         }
-        try {
+        /*try {
             // Delete the data related to the file on disk and memory if completed
             if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
                 if (this.checkSum(srcPath)) {
@@ -141,7 +141,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
             }
         } catch (IOException ex) {
             Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        }*/
     }
 
     /**
@@ -152,7 +152,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
      * false
      * @throws java.io.IOException
      */
-    public boolean checkSum(String srcPath) throws IOException {
+    /*public boolean checkSum(String srcPath) throws IOException {
         Adler32 checkSumGen = new Adler32();
         int numOfChunks = this.headerList.get(srcPath).numOfChunks;
         File desFile = new File(this.headerList.get(srcPath).desPath);
@@ -180,5 +180,5 @@ public class FileTransferHandler implements FileTransfer.Iface {
         }
 
         return checkSumGen.getValue() == this.headerList.get(srcPath).checkSum;
-    }
+    }*/
 }
