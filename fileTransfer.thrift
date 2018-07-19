@@ -12,7 +12,8 @@ struct Metadata {
    1: required string srcPath;
    2: required string desPath;
    3: required i64 checkSum;
-   4: optional i32 size;
+   4: required i32 numOfChunks;
+   5: optional i32 size;
 }
 
 // The data of each file:

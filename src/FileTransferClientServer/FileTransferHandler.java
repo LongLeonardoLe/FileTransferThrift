@@ -48,13 +48,13 @@ public class FileTransferHandler implements FileTransfer.Iface {
 
     // The storage for files' metadata
     private final HashMap<String, Metadata> headerList;
-    
+
     // The storage for path names of data chunks on disk
-    private final HashMap<String, ArrayList<File>> fileNameList;
+    private final HashMap<String, Integer> countRecords;
 
     public FileTransferHandler() {
         this.headerList = new HashMap();
-        this.fileNameList = new HashMap();
+        this.countRecords = new HashMap();
     }
 
     /**
@@ -69,6 +69,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
         // Add the metadata to the list
         if (!this.headerList.containsKey(header.srcPath)) {
             this.headerList.put(header.srcPath, header);
+            this.countRecords.put(header.srcPath, 0);
         }
     }
 
@@ -80,38 +81,14 @@ public class FileTransferHandler implements FileTransfer.Iface {
      */
     @Override
     public void sendDataChunk(DataChunk chunk) throws TException {
-        // Initial the fileNameList
-        if (!this.fileNameList.containsKey(chunk.srcPath)) {
-            this.fileNameList.put(chunk.srcPath, new ArrayList());
+        if (!this.headerList.containsKey(chunk.srcPath)) {
+            return;
         }
 
+        boolean append = chunk.offset != 0;
         try {
-            // Make the directory: ./tempData/<srcPath.hashCode>/
-            String folderName = new StringBuilder().append("./tempData/").append(chunk.srcPath.hashCode()).append('/').toString();
-            File folder = new File(folderName);
-            folder.mkdir();
-            
-            // Write the file with format: <srcPath.hashCode>_<offset>.dat
-            String fileName = new StringBuilder()
-                    .append(chunk.srcPath.hashCode())
-                    .append("_")
-                    .append(chunk.offset)
-                    .append(".dat")
-                    .toString();
-            File file = new File(new StringBuilder()
-                    .append(folderName)
-                    .append(fileName)
-                    .toString());
-            FileChannel writeChannel = new FileOutputStream(file, false).getChannel();
-            writeChannel.write(chunk.buffer);
-            
-            // Add the file name to fileNameList for accurate checksum update
-            if (chunk.offset > this.fileNameList.get(chunk.srcPath).size()) {
-                this.fileNameList.get(chunk.srcPath).add(file);
-            } else {
-                this.fileNameList.get(chunk.srcPath).add(chunk.offset, file);
-            }
-            writeChannel.close();
+            this.countRecords.put(chunk.srcPath, this.countRecords.get(chunk.srcPath) + 1);
+            this.writeToFile(chunk.srcPath, chunk.buffer, append);
         } catch (IOException ex) {
             Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -127,27 +104,11 @@ public class FileTransferHandler implements FileTransfer.Iface {
      */
     @Override
     public void updateChecksum(String srcPath, long checkSum) throws TException {
+        System.out.println(System.nanoTime());
         if (!this.headerList.containsKey(srcPath)) {
             return;
         }
         this.headerList.get(srcPath).checkSum = checkSum;
-        // Disable the append mode
-        boolean append = false;
-
-        // Get the list of File for integration
-        File[] files = new File[this.fileNameList.get(srcPath).size()];
-        this.fileNameList.get(srcPath).toArray(files);
-        
-        // Allocate the buffer and check for integrity
-        ByteBuffer buffer = ByteBuffer.allocate(files.length * fileTransferConstants.CHUNK_MAX_SIZE);
-        try {
-            if (this.checkSum(srcPath, files, buffer)) {
-                this.writeToFile(srcPath, buffer, append);
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(FileTransferHandler.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     /**
@@ -161,61 +122,62 @@ public class FileTransferHandler implements FileTransfer.Iface {
     public void writeToFile(String srcPath, ByteBuffer buffer, boolean append) throws IOException {
         // Write output to file
         File outputFile = new File(this.headerList.get(srcPath).desPath);
-        FileChannel writeChannel = new FileOutputStream(outputFile, append).getChannel();
-        writeChannel.write(buffer);
-        System.out.println(" [x] Write to file: " + this.headerList.get(srcPath).desPath);
-        writeChannel.close();
-        
-        // Delete the data related to the file on disk and memory
-        this.headerList.remove(srcPath);
-        this.fileNameList.remove(srcPath);
-        File folder = new File(new StringBuilder().append("./tempData/").append(Integer.toString(srcPath.hashCode())).append('/').toString());
-        File[] files = folder.listFiles();
-        for (File file : files) {
-            file.delete();
+        try (FileChannel writeChannel = new FileOutputStream(outputFile, append).getChannel()) {
+            writeChannel.write(buffer);
+            writeChannel.close();
         }
-        folder.delete();
+        try {
+            // Delete the data related to the file on disk and memory if completed
+            if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
+                if (this.checkSum(srcPath)) {
+                    System.out.println(System.nanoTime());
+                    System.out.println(" [x] Write to file: " + this.headerList.get(srcPath).desPath);
+                    this.headerList.remove(srcPath);
+                } else {
+                    File file = new File(this.headerList.get(srcPath).desPath);
+                    file.delete();
+                    System.err.println(" [ERROR] Writing to " + this.headerList.get(srcPath).desPath + " failed.");
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
      * Check sum of the file given a new data chunk
      *
      * @param srcPath file source path
-     * @param files
-     * @param buffer ByteBuffer of the file
      * @return boolean: true if match the checksum in the metadata, otherwise,
      * false
      * @throws java.io.IOException
-     * @throws NoSuchAlgorithmException
      */
-    public boolean checkSum(String srcPath, File[] files, ByteBuffer buffer) throws IOException {
+    public boolean checkSum(String srcPath) throws IOException {
         Adler32 checkSumGen = new Adler32();
+        int numOfChunks = this.headerList.get(srcPath).numOfChunks;
+        File desFile = new File(this.headerList.get(srcPath).desPath);
 
-        // Transfer bytes from sent data chunks into the ByteBuffer
-        for (File chunkFile : files) {
-            // Read the file into a byte array
-            FileInputStream readChannel = new FileInputStream(chunkFile);
-            byte[] chunkBuffer = new byte[(int) chunkFile.length()];
-            readChannel.read(chunkBuffer);
-            
-            // Parse the file name to get the offset
-            String fileName = chunkFile.getName();
-            String offStr = fileName.substring(Integer.toString(srcPath.hashCode()).length() + 1, fileName.length() - ".dat".length());
-            int offset = new Integer(offStr);
-            
-            // Transfer the byte array to the buffer
-            buffer.position(fileTransferConstants.CHUNK_MAX_SIZE * offset);
-            buffer.put(chunkBuffer);
-            
-            // Update the checksum
-            checkSumGen.update(chunkBuffer);
-        }
+        try (FileChannel readChannel = new FileInputStream(desFile).getChannel()) {
+            for (int i = 0; i < numOfChunks; ++i) {
+                ByteBuffer byteChunk;
+                if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
+                    byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
+                } else {
+                    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+                }
+                readChannel.read(byteChunk);
 
-        // Get rid of unused bytes
-        if (buffer.position() < buffer.limit()) {
-            buffer.limit(buffer.position());
+                // Get rid of unused bytes
+                if (byteChunk.position() < byteChunk.limit()) {
+                    byteChunk.limit(byteChunk.position());
+                }
+                byteChunk.rewind();
+
+                // Update the checksum
+                checkSumGen.update(byteChunk);
+                byteChunk.rewind();
+            }
         }
-        buffer.rewind();
 
         return checkSumGen.getValue() == this.headerList.get(srcPath).checkSum;
     }

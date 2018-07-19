@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
@@ -62,12 +63,12 @@ public class FileTransferClient {
         File inputFile = new File(srcPath);
         int offset = 0;
         // Obtain the number of data chunks from the file
-        long numberOfChunks = (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
-        
+        int numberOfChunks = (int) (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
+
         // Try to open and read the file 
         try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
             // Create the metadata and send it
-            Metadata fileMeta = new Metadata(srcPath, desPath, 0);
+            Metadata fileMeta = new Metadata(srcPath, desPath, 0, numberOfChunks);
             client.sendMetaData(fileMeta);
 
             // Parse the file into smaller chunks and send them
@@ -90,12 +91,15 @@ public class FileTransferClient {
                 // Update the checksum
                 checkSumGen.update(byteChunk);
                 byteChunk.rewind();
+                if ((offset + 1) == numberOfChunks) {
+                    client.updateChecksum(srcPath, checkSumGen.getValue());
+                }
 
                 // Create a data chunk and send it
                 DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
                 client.sendDataChunk(chunk);
             }
-            client.updateChecksum(srcPath, checkSumGen.getValue());
+            //client.updateChecksum(srcPath, checkSumGen.getValue());
             readChannel.close();
 
         } catch (IOException ex) {
@@ -103,26 +107,37 @@ public class FileTransferClient {
         }
     }
 
-    public static void main(String[] argv) throws IOException {
-        TTransport transport;
-        transport = new TFramedTransport(new TSocket("localhost", 9090));
-        TProtocol protocol = new TBinaryProtocol(transport);
+    public static Thread createThread(int port, String dirPath, File[] paths) {
+        return new Thread(() -> {
+            TTransport transport;
+            transport = new TFramedTransport(new TSocket("localhost", port));
+            TProtocol protocol = new TBinaryProtocol(transport);
+            FileTransfer.Client client = new FileTransfer.Client(protocol);
+            try {
+                transport.open();
+                for (int i = 0; i < paths.length; ++i) {
+                    String srcPath = new StringBuilder().append(dirPath).append('/').append(paths[i].getName()).toString();
+                    String desPath = new StringBuilder().append("/home/cpu10360/Desktop/").append("des/").append(paths[i].getName()).toString();
+                    sendFile(client, srcPath, desPath);
+                }
+            } catch (TException ex) {
+                Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
 
-        FileTransfer.Client client = new FileTransfer.Client(protocol);
-        try {
-            transport.open();
-            System.out.println("Starting client, sending data...");
-            long startTime = System.nanoTime();
-            sendFile(client, "/home/cpu10360/Desktop/image0.jpg", "/home/cpu10360/Desktop/test0.jpg");
-            sendFile(client, "/home/cpu10360/Desktop/image1.jpg", "/home/cpu10360/Desktop/test1.jpg");
-            sendFile(client, "/home/cpu10360/Desktop/image2.jpg", "/home/cpu10360/Desktop/test2.jpg");
-            sendFile(client, "/home/cpu10360/Desktop/image3.jpg", "/home/cpu10360/Desktop/test3.jpg");
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime) / 1000000;
-            System.out.println(" [x] Data sent in 0." + duration + " seconds.");
-        } catch (TException ex) {
-            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+    public static void main(String[] argv) throws IOException {
+        File directory = new File("/home/cpu10360/Desktop/src/");
+        File[] files = directory.listFiles();
+        int port = 9000;
+        int numOfClients = 16;
+        long startTime = System.nanoTime();
+        for (int i = 0; i < numOfClients; ++i) {
+            File[] paths = Arrays.copyOfRange(files, i * files.length / numOfClients, (i + 1) * files.length / numOfClients);
+            createThread(port++, directory.getAbsolutePath(), paths).start();
         }
-        transport.close();
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1000000;
+        System.out.println(" [x] Data sent in 0." + duration + " seconds.");
     }
 }
