@@ -67,7 +67,7 @@ public class FileTransferClient {
         int numberOfChunks = (int) (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
 
         // Try to open and read the file 
-        try (FileInputStream readChannel = new FileInputStream(inputFile)) {
+        try (RandomAccessFile readChannel = new RandomAccessFile(inputFile, "r")) {
             // Create the metadata and send it
             Metadata fileMeta = new Metadata(srcPath, desPath, 0, numberOfChunks);
             client.sendMetaData(fileMeta);
@@ -77,11 +77,13 @@ public class FileTransferClient {
                 // Allocate the ByteBuffer to which bytes is transferred to
                 
                 byte[] byteChunk;
-                if (readChannel.available() < fileTransferConstants.CHUNK_MAX_SIZE) {
-                    byteChunk = new byte[readChannel.available()];
+                int remainingSize = (int) (readChannel.length() - readChannel.getFilePointer());
+                if (remainingSize < (long) fileTransferConstants.CHUNK_MAX_SIZE) {
+                    byteChunk = new byte[remainingSize];
                 } else {
                     byteChunk = new byte[fileTransferConstants.CHUNK_MAX_SIZE];
                 }
+                readChannel.read(byteChunk);
 
                 // Update the checksum
                 /*checkSumGen.update(byteChunk);
@@ -127,7 +129,6 @@ public class FileTransferClient {
         int numOfClients = 4;
         for (int i = 0; i < numOfClients; ++i) {
             File[] paths = Arrays.copyOfRange(files, i * files.length / numOfClients, (i + 1) * files.length / numOfClients);
-            System.out.println(paths.length);
             createThread(port++, directory.getAbsolutePath(), paths).start();
         }
     }
