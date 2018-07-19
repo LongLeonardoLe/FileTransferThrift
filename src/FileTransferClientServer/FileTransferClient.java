@@ -60,7 +60,7 @@ public class FileTransferClient {
      * @throws TException
      */
     public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
-        //Adler32 checkSumGen = new Adler32();
+        Adler32 checkSumGen = new Adler32();
         File inputFile = new File(srcPath);
         int offset = 0;
         // Obtain the number of data chunks from the file
@@ -70,12 +70,12 @@ public class FileTransferClient {
         try (RandomAccessFile readChannel = new RandomAccessFile(inputFile, "r")) {
             // Create the metadata and send it
             Metadata fileMeta = new Metadata(srcPath, desPath, 0, numberOfChunks);
+            fileMeta.setSize((int) inputFile.length());
             client.sendMetaData(fileMeta);
 
             // Parse the file into smaller chunks and send them
             do {
                 // Allocate the ByteBuffer to which bytes is transferred to
-                
                 byte[] byteChunk;
                 int remainingSize = (int) (readChannel.length() - readChannel.getFilePointer());
                 if (remainingSize < (long) fileTransferConstants.CHUNK_MAX_SIZE) {
@@ -86,11 +86,10 @@ public class FileTransferClient {
                 readChannel.read(byteChunk);
 
                 // Update the checksum
-                /*checkSumGen.update(byteChunk);
-                byteChunk.rewind();
+                checkSumGen.update(byteChunk);
                 if ((offset + 1) == numberOfChunks) {
                     client.updateChecksum(srcPath, checkSumGen.getValue());
-                }*/
+                }
                 
                 // Create a data chunk and send it
                 DataChunk chunk = new DataChunk(srcPath, ByteBuffer.wrap(byteChunk), offset++);
@@ -123,13 +122,16 @@ public class FileTransferClient {
     }
 
     public static void main(String[] argv) throws IOException {
-        File directory = new File("/home/cpu10360/Desktop/src/");
-        File[] files = directory.listFiles();
-        int port = 9000;
-        int numOfClients = 4;
-        for (int i = 0; i < numOfClients; ++i) {
-            File[] paths = Arrays.copyOfRange(files, i * files.length / numOfClients, (i + 1) * files.length / numOfClients);
-            createThread(port++, directory.getAbsolutePath(), paths).start();
+        TTransport transport;
+        transport = new TFramedTransport(new TSocket("localhost", 9000));
+        TProtocol protocol = new TBinaryProtocol(transport);
+        FileTransfer.Client client = new FileTransfer.Client(protocol);
+        try {
+            transport.open();
+            sendFile(client, "/home/cpu10360/Desktop/102flowers.tgz", "/home/cpu10360/Desktop/test.tgz");
+
+        } catch (TException ex) {
+            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

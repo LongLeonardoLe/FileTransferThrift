@@ -64,7 +64,7 @@ public class FileTransferServer {
     }
 
     public static void main(String[] argv) {
-        int numOfServers = 4;
+        int numOfServers = 1;
         int port = 9000;
         for (int i = 0; i < numOfServers; ++i) {
             createThread(port++).start();
