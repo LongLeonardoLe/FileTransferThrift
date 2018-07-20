@@ -60,13 +60,20 @@ public class FileTransferClient {
      * @throws TException
      */
     public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
-        File inputFile = new File(srcPath);
-        long numberOfChunks = inputFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
-        Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, inputFile.length());
+        File srcFile = new File(srcPath);
+        File desFile = new File(desPath);
+        long numberOfChunks = srcFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
+        Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, srcFile.length());
         List<List<Long>> checksumList = client.sendMetaData(header);
+        if (desFile.exists()) {
+            if (desFile.length() == srcFile.length()) {
+                return;
+            } else {
+                sendWholeFile(client, srcPath, desPath);
+                return;
+            }
+        }
         if (checksumList.isEmpty()) {
-            sendWholeFile(client, srcPath, desPath);
-        } else if (checksumList.size() != inputFile.length()) {
             sendWholeFile(client, srcPath, desPath);
         } else {
             sendPartialFile(client, srcPath, desPath, checksumList);
