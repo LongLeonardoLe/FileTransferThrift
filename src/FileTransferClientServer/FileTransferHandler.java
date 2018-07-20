@@ -113,26 +113,8 @@ public class FileTransferHandler implements FileTransfer.Iface {
 	    return;
 	}
 	this.headerList.get(srcPath).checkSum = checkSum;
-    }
-
-    /**
-     * Write the buffer to file
-     *
-     * @param srcPath
-     * @param buffer bytes to be written
-     * @param offset
-     * @throws IOException
-     */
-    public void writeToFile(String srcPath, ByteBuffer buffer, int offset) throws IOException {
-	// Write output to file
-	try (RandomAccessFile writer = new RandomAccessFile(this.headerList.get(srcPath).desPath, "rw")) {
-	    writer.seek(offset * fileTransferConstants.CHUNK_MAX_SIZE);
-            writer.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
-	    writer.close();
-	}
-
-	// Check whether all chunks have been received
-	if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
+        
+        if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
 	    try {
                 // Calculate checksum for the destination file 
 		if (this.checkSum(srcPath)) {
@@ -148,6 +130,22 @@ public class FileTransferHandler implements FileTransfer.Iface {
 	    } catch (IOException ex) {
 		Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
 	    }
+	}
+    }
+
+    /**
+     * Write the buffer to file
+     *
+     * @param srcPath
+     * @param buffer bytes to be written
+     * @param offset
+     * @throws IOException
+     */
+    public void writeToFile(String srcPath, ByteBuffer buffer, int offset) throws IOException {
+	// Write output to file
+	try (RandomAccessFile writer = new RandomAccessFile(this.headerList.get(srcPath).desPath, "rw")) {
+	    writer.seek(offset * fileTransferConstants.CHUNK_MAX_SIZE);
+            writer.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
 	}
     }
 

@@ -10,6 +10,6 @@ package FileTransfer;
 @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
 public class fileTransferConstants {
 
-    public static final int CHUNK_MAX_SIZE = 2048;
+    public static final int CHUNK_MAX_SIZE = 16384;
 
 }

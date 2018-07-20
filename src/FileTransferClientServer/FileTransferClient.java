@@ -92,17 +92,13 @@ public class FileTransferClient {
 
 		// Update the checksum
 		checkSumGen.update(byteChunk);
-		if ((offset + 1) == numberOfChunks) {
-                    // Send the checksum to the server if this is the last chunk
-                    // Is a sync method -> ensure the checksum is updated in the server before the last chunk is sent
-		    client.updateChecksum(srcPath, checkSumGen.getValue());
-		}
 		byteChunk.rewind();
 
 		// Create a data chunk and send it
 		DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
 		client.sendDataChunk(chunk);
 	    } while (offset < numberOfChunks);
+            client.updateChecksum(srcPath, checkSumGen.getValue());
 	    readChannel.close();
 
 	} catch (IOException ex) {
