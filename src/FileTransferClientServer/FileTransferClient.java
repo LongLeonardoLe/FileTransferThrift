@@ -34,7 +34,8 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
@@ -59,55 +60,79 @@ public class FileTransferClient {
      * @throws TException
      */
     public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
-	Adler32 checkSumGen = new Adler32();
-	File inputFile = new File(srcPath);
-	int offset = 0;
-	// Obtain the number of data chunks from the file
-	int numberOfChunks = (int) (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
+        File inputFile = new File(srcPath);
+        long numberOfChunks = inputFile.length() / fileTransferConstants.CHUNK_MAX_SIZE;
+        Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, inputFile.length());
+        List<List<Long>> checksumList = client.sendMetaData(header);
+        if (checksumList == null) {
+            sendWholeFile(client, srcPath, desPath);
+        } else {
+            
+        }
+    }
+    
+    public static void sendPartialFile(FileTransfer.Client client, String srcPath, String desPath, List<List<Long>> checksumList) throws TException {
+        Adler32 checksumGen = new Adler32();
+            try (FileChannel reader = new RandomAccessFile(srcPath, "r").getChannel()) {
+                for (int i = 0; i < checksumList.size(); ++i) {
+                    long offset = checksumList.get(i).get(0);
+                    reader.position(offset);
+                    ByteBuffer byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+                    reader.read(byteChunk);
 
-	// Try to open and read the file 
-	try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
-	    // Create the metadata and send it
-	    Metadata fileMeta = new Metadata(srcPath, desPath, 0, numberOfChunks);
-	    fileMeta.setSize((int) inputFile.length());
-	    client.sendMetaData(fileMeta);
+                    // Get rid of unused bytes
+                    if (byteChunk.position() < byteChunk.limit()) {
+                        byteChunk.limit(byteChunk.position());
+                    }
+                    byteChunk.rewind();
+                    
+                    checksumGen.update(byteChunk);
+                    if (checksumGen.getValue() != checksumList.get(i).get(1)) {
+                        byteChunk.rewind();
+                        DataChunk chunk = new DataChunk(srcPath, byteChunk, offset);
+                        client.sendDataChunk(chunk);
+                    }
+                    
+                    checksumGen.reset();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+    }
 
-	    // Parse the file into smaller chunks and send them
-	    do {
-		// Allocate the ByteBuffer to which bytes will be transferred to
-		ByteBuffer byteChunk;
-		int remainingSize = (int) (readChannel.size() - readChannel.position());
-		if (remainingSize < (long) fileTransferConstants.CHUNK_MAX_SIZE) {
-		    byteChunk = ByteBuffer.allocate(remainingSize);
-		} else {
-		    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
-		}
-		readChannel.read(byteChunk);
+    public static void sendWholeFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
+        Adler32 checksumGen = new Adler32();
 
-		// Get rid of unused bytes
-		if (byteChunk.position() < byteChunk.limit()) {
-		    byteChunk.limit(byteChunk.position());
-		}
-		byteChunk.rewind();
+        // Try to open and read the file 
+        try (FileChannel reader = new RandomAccessFile(srcPath, "r").getChannel()) {
+            long offset = 0;
+            // Parse the file into smaller chunks and send them
+            do {
+                // Allocate the ByteBuffer to which bytes will be transferred to
+                ByteBuffer byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+                reader.read(byteChunk);
 
-		// Update the checksum
-		checkSumGen.update(byteChunk);
-		if ((offset + 1) == numberOfChunks) {
-                    // Send the checksum to the server if this is the last chunk
-                    // Is a sync method -> ensure the checksum is updated in the server before the last chunk is sent
-		    client.updateChecksum(srcPath, checkSumGen.getValue());
-		}
-		byteChunk.rewind();
+                // Get rid of unused bytes
+                if (byteChunk.position() < byteChunk.limit()) {
+                    byteChunk.limit(byteChunk.position());
+                }
+                byteChunk.rewind();
 
-		// Create a data chunk and send it
-		DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
-		client.sendDataChunk(chunk);
-	    } while (offset < numberOfChunks);
-	    readChannel.close();
+                // Update the checksum
+                checksumGen.update(byteChunk);
+                byteChunk.rewind();
 
-	} catch (IOException ex) {
-	    Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
-	}
+                // Create a data chunk and send it
+                DataChunk chunk = new DataChunk(srcPath, byteChunk, offset);
+                client.sendDataChunk(chunk);
+                offset = reader.position();
+            } while (offset < reader.size());
+            client.updateChecksum(srcPath, checksumGen.getValue());
+            reader.close();
+
+        } catch (IOException ex) {
+            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     // To work with multi-threaded, uncomment the code block
@@ -131,16 +156,16 @@ public class FileTransferClient {
     }*/
     
     public static void main(String[] argv) throws IOException {
-	TTransport transport;
-	transport = new TFramedTransport(new TSocket("localhost", 9000));
-	TProtocol protocol = new TBinaryProtocol(transport);
-	FileTransfer.Client client = new FileTransfer.Client(protocol);
-	try {
-	    transport.open();
-	    sendFile(client, "/home/cpu10360/Desktop/102flowers.tgz", "/home/cpu10360/Desktop/test.tgz");
+        TTransport transport;
+        transport = new TFramedTransport(new TSocket("localhost", 9000));
+        TProtocol protocol = new TBinaryProtocol(transport);
+        FileTransfer.Client client = new FileTransfer.Client(protocol);
+        try {
+            transport.open();
+            sendFile(client, "/home/cpu10360/Desktop/102flowers.tgz", "/home/cpu10360/Desktop/test.tgz");
 
-	} catch (TException ex) {
-	    Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
-	}
+        } catch (TException ex) {
+            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
