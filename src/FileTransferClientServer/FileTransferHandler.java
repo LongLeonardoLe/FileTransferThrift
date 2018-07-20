@@ -131,13 +131,16 @@ public class FileTransferHandler implements FileTransfer.Iface {
 	    writer.close();
 	}
 
-	// Delete the data related to the file on disk and memory if completed
+	// Check whether all chunks have been received
 	if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
 	    try {
+                // Calculate checksum for the destination file 
 		if (this.checkSum(srcPath)) {
+                    // Checksum SUCCEEDED, keep the file, remove the metadata from memory
 		    System.out.println(" [x] Write to file: " + this.headerList.get(srcPath).desPath);
 		    this.headerList.remove(srcPath);
 		} else {
+                    // Checksum FAILED, delete the file, error comes out
 		    File file = new File(this.headerList.get(srcPath).desPath);
 		    file.delete();
 		    System.err.println(" [ERROR] Writing to " + this.headerList.get(srcPath).desPath + " failed.");

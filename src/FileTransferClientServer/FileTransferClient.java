@@ -74,7 +74,7 @@ public class FileTransferClient {
 
 	    // Parse the file into smaller chunks and send them
 	    do {
-		// Allocate the ByteBuffer to which bytes is transferred to
+		// Allocate the ByteBuffer to which bytes will be transferred to
 		ByteBuffer byteChunk;
 		int remainingSize = (int) (readChannel.size() - readChannel.position());
 		if (remainingSize < (long) fileTransferConstants.CHUNK_MAX_SIZE) {
@@ -93,6 +93,8 @@ public class FileTransferClient {
 		// Update the checksum
 		checkSumGen.update(byteChunk);
 		if ((offset + 1) == numberOfChunks) {
+                    // Send the checksum to the server if this is the last chunk
+                    // Is a sync method -> ensure the checksum is updated in the server before the last chunk is sent
 		    client.updateChecksum(srcPath, checkSumGen.getValue());
 		}
 		byteChunk.rewind();
