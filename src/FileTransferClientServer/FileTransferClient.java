@@ -31,8 +31,10 @@ import org.apache.thrift.protocol.TProtocol;
 
 import java.io.FileInputStream;
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
@@ -48,9 +50,8 @@ import org.apache.thrift.TException;
 public class FileTransferClient {
 
     /**
-     * Take source path, destination path, obtain the metadata and send it
-     * first, then parse the file for small chunk of 2048 bytes maximum and send
-     * them.
+     * Take source path, destination path, obtain the metadata and send it first, then parse the
+     * file for small chunk of 2048 bytes maximum and send them.
      *
      * @param client
      * @param srcPath path to the source file
@@ -58,71 +59,86 @@ public class FileTransferClient {
      * @throws TException
      */
     public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
-        Adler32 checkSumGen = new Adler32();
-        File inputFile = new File(srcPath);
-        int offset = 0;
-        // Obtain the number of data chunks from the file
-        long numberOfChunks = (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
-        
-        // Try to open and read the file 
-        try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
-            // Create the metadata and send it
-            Metadata fileMeta = new Metadata(srcPath, desPath, 0);
-            client.sendMetaData(fileMeta);
+	Adler32 checkSumGen = new Adler32();
+	File inputFile = new File(srcPath);
+	int offset = 0;
+	// Obtain the number of data chunks from the file
+	int numberOfChunks = (int) (inputFile.length() / (long) fileTransferConstants.CHUNK_MAX_SIZE) + 1;
 
-            // Parse the file into smaller chunks and send them
-            while (offset < numberOfChunks) {
-                // Allocate the ByteBuffer to which bytes is transferred to
-                ByteBuffer byteChunk;
-                if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
-                    byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
-                } else {
-                    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
-                }
-                readChannel.read(byteChunk);
+	// Try to open and read the file 
+	try (FileChannel readChannel = new FileInputStream(inputFile).getChannel()) {
+	    // Create the metadata and send it
+	    Metadata fileMeta = new Metadata(srcPath, desPath, 0, numberOfChunks);
+	    fileMeta.setSize((int) inputFile.length());
+	    client.sendMetaData(fileMeta);
 
-                // Get rid of unused bytes
-                if (byteChunk.position() < byteChunk.limit()) {
-                    byteChunk.limit(byteChunk.position());
-                }
-                byteChunk.rewind();
+	    // Parse the file into smaller chunks and send them
+	    do {
+		// Allocate the ByteBuffer to which bytes is transferred to
+		ByteBuffer byteChunk;
+		int remainingSize = (int) (readChannel.size() - readChannel.position());
+		if (remainingSize < (long) fileTransferConstants.CHUNK_MAX_SIZE) {
+		    byteChunk = ByteBuffer.allocate(remainingSize);
+		} else {
+		    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+		}
+		readChannel.read(byteChunk);
 
-                // Update the checksum
-                checkSumGen.update(byteChunk);
-                byteChunk.rewind();
+		// Get rid of unused bytes
+		if (byteChunk.position() < byteChunk.limit()) {
+		    byteChunk.limit(byteChunk.position());
+		}
+		byteChunk.rewind();
 
-                // Create a data chunk and send it
-                DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
-                client.sendDataChunk(chunk);
-            }
-            client.updateChecksum(srcPath, checkSumGen.getValue());
-            readChannel.close();
+		// Update the checksum
+		checkSumGen.update(byteChunk);
+		if ((offset + 1) == numberOfChunks) {
+		    client.updateChecksum(srcPath, checkSumGen.getValue());
+		}
+		byteChunk.rewind();
 
-        } catch (IOException ex) {
-            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
+		// Create a data chunk and send it
+		DataChunk chunk = new DataChunk(srcPath, byteChunk, offset++);
+		client.sendDataChunk(chunk);
+	    } while (offset < numberOfChunks);
+	    readChannel.close();
+
+	} catch (IOException ex) {
+	    Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+	}
     }
 
+    // To work with multi-threaded, uncomment the code block
+    /*public static Thread createThread(int port, String dirPath, File[] paths) {
+        return new Thread(() -> {
+            TTransport transport;
+            transport = new TFramedTransport(new TSocket("localhost", port));
+            TProtocol protocol = new TBinaryProtocol(transport);
+            FileTransfer.Client client = new FileTransfer.Client(protocol);
+            try {
+                transport.open();
+                for (int i = 0; i < paths.length; ++i) {
+                    String srcPath = new StringBuilder().append(dirPath).append('/').append(paths[i].getName()).toString();
+                    String desPath = new StringBuilder().append("/home/cpu10360/Desktop/").append("des/").append(paths[i].getName()).toString();
+                    sendFile(client, srcPath, desPath);
+                }
+            } catch (TException ex) {
+                Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }*/
+    
     public static void main(String[] argv) throws IOException {
-        TTransport transport;
-        transport = new TFramedTransport(new TSocket("localhost", 9090));
-        TProtocol protocol = new TBinaryProtocol(transport);
+	TTransport transport;
+	transport = new TFramedTransport(new TSocket("localhost", 9000));
+	TProtocol protocol = new TBinaryProtocol(transport);
+	FileTransfer.Client client = new FileTransfer.Client(protocol);
+	try {
+	    transport.open();
+	    sendFile(client, "/home/cpu10360/Desktop/102flowers.tgz", "/home/cpu10360/Desktop/test.tgz");
 
-        FileTransfer.Client client = new FileTransfer.Client(protocol);
-        try {
-            transport.open();
-            System.out.println("Starting client, sending data...");
-            long startTime = System.nanoTime();
-            sendFile(client, "/home/cpu10360/Desktop/image.jpg", "/home/cpu10360/Desktop/test.jpg");
-            sendFile(client, "/home/cpu10360/Desktop/image1.jpg", "/home/cpu10360/Desktop/test1.jpg");
-            sendFile(client, "/home/cpu10360/Desktop/image2.jpg", "/home/cpu10360/Desktop/test2.jpg");
-            sendFile(client, "/home/cpu10360/Desktop/image3.jpg", "/home/cpu10360/Desktop/test3.jpg");
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime) / 1000000;
-            System.out.println(" [x] Data sent in 0." + duration + " seconds.");
-        } catch (TException ex) {
-            Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        transport.close();
+	} catch (TException ex) {
+	    Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
+	}
     }
 }
