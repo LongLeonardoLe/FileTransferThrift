@@ -27,76 +27,73 @@ public class DataChunk implements org.apache.thrift.TBase<DataChunk, DataChunk._
     public int offset; // required
 
     /**
-     * The set of fields this struct contains, along with convenience methods
-     * for finding and manipulating them.
+     * The set of fields this struct contains, along with convenience methods for finding and
+     * manipulating them.
      */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-        SRC_PATH((short) 1, "srcPath"),
-        BUFFER((short) 2, "buffer"),
-        OFFSET((short) 3, "offset");
+	SRC_PATH((short) 1, "srcPath"),
+	BUFFER((short) 2, "buffer"),
+	OFFSET((short) 3, "offset");
 
-        private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+	private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
-        static {
-            for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
-                byName.put(field.getFieldName(), field);
-            }
-        }
+	static {
+	    for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+		byName.put(field.getFieldName(), field);
+	    }
+	}
 
-        /**
-         * Find the _Fields constant that matches fieldId, or null if its not
-         * found.
-         */
-        @org.apache.thrift.annotation.Nullable
-        public static _Fields findByThriftId(int fieldId) {
-            switch (fieldId) {
-                case 1: // SRC_PATH
-                    return SRC_PATH;
-                case 2: // BUFFER
-                    return BUFFER;
-                case 3: // OFFSET
-                    return OFFSET;
-                default:
-                    return null;
-            }
-        }
+	/**
+	 * Find the _Fields constant that matches fieldId, or null if its not found.
+	 */
+	@org.apache.thrift.annotation.Nullable
+	public static _Fields findByThriftId(int fieldId) {
+	    switch (fieldId) {
+		case 1: // SRC_PATH
+		    return SRC_PATH;
+		case 2: // BUFFER
+		    return BUFFER;
+		case 3: // OFFSET
+		    return OFFSET;
+		default:
+		    return null;
+	    }
+	}
 
-        /**
-         * Find the _Fields constant that matches fieldId, throwing an exception
-         * if it is not found.
-         */
-        public static _Fields findByThriftIdOrThrow(int fieldId) {
-            _Fields fields = findByThriftId(fieldId);
-            if (fields == null) {
-                throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
-            }
-            return fields;
-        }
+	/**
+	 * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
+	 */
+	public static _Fields findByThriftIdOrThrow(int fieldId) {
+	    _Fields fields = findByThriftId(fieldId);
+	    if (fields == null) {
+		throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+	    }
+	    return fields;
+	}
 
-        /**
-         * Find the _Fields constant that matches name, or null if its not
-         * found.
-         */
-        @org.apache.thrift.annotation.Nullable
-        public static _Fields findByName(java.lang.String name) {
-            return byName.get(name);
-        }
+	/**
+	 * Find the _Fields constant that matches name, or null if its not found.
+	 */
+	@org.apache.thrift.annotation.Nullable
+	public static _Fields findByName(java.lang.String name) {
+	    return byName.get(name);
+	}
 
-        private final short _thriftId;
-        private final java.lang.String _fieldName;
+	private final short _thriftId;
+	private final java.lang.String _fieldName;
 
-        _Fields(short thriftId, java.lang.String fieldName) {
-            _thriftId = thriftId;
-            _fieldName = fieldName;
-        }
+	_Fields(short thriftId, java.lang.String fieldName) {
+	    _thriftId = thriftId;
+	    _fieldName = fieldName;
+	}
 
-        public short getThriftFieldId() {
-            return _thriftId;
-        }
+	public short getThriftFieldId() {
+	    return _thriftId;
+	}
 
-        public java.lang.String getFieldName() {
-            return _fieldName;
-        }
+	public java.lang.String getFieldName() {
+	    return _fieldName;
+	}
     }
 
     // isset id assignments
@@ -105,516 +102,513 @@ public class DataChunk implements org.apache.thrift.TBase<DataChunk, DataChunk._
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
 
     static {
-        java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-        tmpMap.put(_Fields.SRC_PATH, new org.apache.thrift.meta_data.FieldMetaData("srcPath", org.apache.thrift.TFieldRequirementType.REQUIRED,
-                new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-        tmpMap.put(_Fields.BUFFER, new org.apache.thrift.meta_data.FieldMetaData("buffer", org.apache.thrift.TFieldRequirementType.REQUIRED,
-                new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING, true)));
-        tmpMap.put(_Fields.OFFSET, new org.apache.thrift.meta_data.FieldMetaData("offset", org.apache.thrift.TFieldRequirementType.REQUIRED,
-                new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-        metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-        org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(DataChunk.class, metaDataMap);
+	java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+	tmpMap.put(_Fields.SRC_PATH, new org.apache.thrift.meta_data.FieldMetaData("srcPath", org.apache.thrift.TFieldRequirementType.REQUIRED,
+		new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+	tmpMap.put(_Fields.BUFFER, new org.apache.thrift.meta_data.FieldMetaData("buffer", org.apache.thrift.TFieldRequirementType.REQUIRED,
+		new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING, true)));
+	tmpMap.put(_Fields.OFFSET, new org.apache.thrift.meta_data.FieldMetaData("offset", org.apache.thrift.TFieldRequirementType.REQUIRED,
+		new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+	metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+	org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(DataChunk.class, metaDataMap);
     }
 
     public DataChunk() {
     }
 
     public DataChunk(
-            java.lang.String srcPath,
-            java.nio.ByteBuffer buffer,
-            int offset) {
-        this();
-        this.srcPath = srcPath;
-        this.buffer = org.apache.thrift.TBaseHelper.copyBinary(buffer);
-        this.offset = offset;
-        setOffsetIsSet(true);
+	    java.lang.String srcPath,
+	    java.nio.ByteBuffer buffer,
+	    int offset) {
+	this();
+	this.srcPath = srcPath;
+	this.buffer = org.apache.thrift.TBaseHelper.copyBinary(buffer);
+	this.offset = offset;
+	setOffsetIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public DataChunk(DataChunk other) {
-        __isset_bitfield = other.__isset_bitfield;
-        if (other.isSetSrcPath()) {
-            this.srcPath = other.srcPath;
-        }
-        if (other.isSetBuffer()) {
-            this.buffer = org.apache.thrift.TBaseHelper.copyBinary(other.buffer);
-        }
-        this.offset = other.offset;
+	__isset_bitfield = other.__isset_bitfield;
+	if (other.isSetSrcPath()) {
+	    this.srcPath = other.srcPath;
+	}
+	if (other.isSetBuffer()) {
+	    this.buffer = org.apache.thrift.TBaseHelper.copyBinary(other.buffer);
+	}
+	this.offset = other.offset;
     }
 
     public DataChunk deepCopy() {
-        return new DataChunk(this);
+	return new DataChunk(this);
     }
 
     @Override
     public void clear() {
-        this.srcPath = null;
-        this.buffer = null;
-        setOffsetIsSet(false);
-        this.offset = 0;
+	this.srcPath = null;
+	this.buffer = null;
+	setOffsetIsSet(false);
+	this.offset = 0;
     }
 
     @org.apache.thrift.annotation.Nullable
     public java.lang.String getSrcPath() {
-        return this.srcPath;
+	return this.srcPath;
     }
 
     public DataChunk setSrcPath(@org.apache.thrift.annotation.Nullable java.lang.String srcPath) {
-        this.srcPath = srcPath;
-        return this;
+	this.srcPath = srcPath;
+	return this;
     }
 
     public void unsetSrcPath() {
-        this.srcPath = null;
+	this.srcPath = null;
     }
 
     /**
-     * Returns true if field srcPath is set (has been assigned a value) and
-     * false otherwise
+     * Returns true if field srcPath is set (has been assigned a value) and false otherwise
      */
     public boolean isSetSrcPath() {
-        return this.srcPath != null;
+	return this.srcPath != null;
     }
 
     public void setSrcPathIsSet(boolean value) {
-        if (!value) {
-            this.srcPath = null;
-        }
+	if (!value) {
+	    this.srcPath = null;
+	}
     }
 
     public byte[] getBuffer() {
-        setBuffer(org.apache.thrift.TBaseHelper.rightSize(buffer));
-        return buffer == null ? null : buffer.array();
+	setBuffer(org.apache.thrift.TBaseHelper.rightSize(buffer));
+	return buffer == null ? null : buffer.array();
     }
 
     public java.nio.ByteBuffer bufferForBuffer() {
-        return org.apache.thrift.TBaseHelper.copyBinary(buffer);
+	return org.apache.thrift.TBaseHelper.copyBinary(buffer);
     }
 
     public DataChunk setBuffer(byte[] buffer) {
-        this.buffer = buffer == null ? (java.nio.ByteBuffer) null : java.nio.ByteBuffer.wrap(buffer.clone());
-        return this;
+	this.buffer = buffer == null ? (java.nio.ByteBuffer) null : java.nio.ByteBuffer.wrap(buffer.clone());
+	return this;
     }
 
     public DataChunk setBuffer(@org.apache.thrift.annotation.Nullable java.nio.ByteBuffer buffer) {
-        this.buffer = org.apache.thrift.TBaseHelper.copyBinary(buffer);
-        return this;
+	this.buffer = org.apache.thrift.TBaseHelper.copyBinary(buffer);
+	return this;
     }
 
     public void unsetBuffer() {
-        this.buffer = null;
+	this.buffer = null;
     }
 
     /**
-     * Returns true if field buffer is set (has been assigned a value) and false
-     * otherwise
+     * Returns true if field buffer is set (has been assigned a value) and false otherwise
      */
     public boolean isSetBuffer() {
-        return this.buffer != null;
+	return this.buffer != null;
     }
 
     public void setBufferIsSet(boolean value) {
-        if (!value) {
-            this.buffer = null;
-        }
+	if (!value) {
+	    this.buffer = null;
+	}
     }
 
     public int getOffset() {
-        return this.offset;
+	return this.offset;
     }
 
     public DataChunk setOffset(int offset) {
-        this.offset = offset;
-        setOffsetIsSet(true);
-        return this;
+	this.offset = offset;
+	setOffsetIsSet(true);
+	return this;
     }
 
     public void unsetOffset() {
-        __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __OFFSET_ISSET_ID);
+	__isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __OFFSET_ISSET_ID);
     }
 
     /**
-     * Returns true if field offset is set (has been assigned a value) and false
-     * otherwise
+     * Returns true if field offset is set (has been assigned a value) and false otherwise
      */
     public boolean isSetOffset() {
-        return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __OFFSET_ISSET_ID);
+	return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __OFFSET_ISSET_ID);
     }
 
     public void setOffsetIsSet(boolean value) {
-        __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __OFFSET_ISSET_ID, value);
+	__isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __OFFSET_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
-        switch (field) {
-            case SRC_PATH:
-                if (value == null) {
-                    unsetSrcPath();
-                } else {
-                    setSrcPath((java.lang.String) value);
-                }
-                break;
+	switch (field) {
+	    case SRC_PATH:
+		if (value == null) {
+		    unsetSrcPath();
+		} else {
+		    setSrcPath((java.lang.String) value);
+		}
+		break;
 
-            case BUFFER:
-                if (value == null) {
-                    unsetBuffer();
-                } else {
-                    if (value instanceof byte[]) {
-                        setBuffer((byte[]) value);
-                    } else {
-                        setBuffer((java.nio.ByteBuffer) value);
-                    }
-                }
-                break;
+	    case BUFFER:
+		if (value == null) {
+		    unsetBuffer();
+		} else {
+		    if (value instanceof byte[]) {
+			setBuffer((byte[]) value);
+		    } else {
+			setBuffer((java.nio.ByteBuffer) value);
+		    }
+		}
+		break;
 
-            case OFFSET:
-                if (value == null) {
-                    unsetOffset();
-                } else {
-                    setOffset((java.lang.Integer) value);
-                }
-                break;
+	    case OFFSET:
+		if (value == null) {
+		    unsetOffset();
+		} else {
+		    setOffset((java.lang.Integer) value);
+		}
+		break;
 
-        }
+	}
     }
 
     @org.apache.thrift.annotation.Nullable
     public java.lang.Object getFieldValue(_Fields field) {
-        switch (field) {
-            case SRC_PATH:
-                return getSrcPath();
+	switch (field) {
+	    case SRC_PATH:
+		return getSrcPath();
 
-            case BUFFER:
-                return getBuffer();
+	    case BUFFER:
+		return getBuffer();
 
-            case OFFSET:
-                return getOffset();
+	    case OFFSET:
+		return getOffset();
 
-        }
-        throw new java.lang.IllegalStateException();
+	}
+	throw new java.lang.IllegalStateException();
     }
 
     /**
-     * Returns true if field corresponding to fieldID is set (has been assigned
-     * a value) and false otherwise
+     * Returns true if field corresponding to fieldID is set (has been assigned a value) and false
+     * otherwise
      */
     public boolean isSet(_Fields field) {
-        if (field == null) {
-            throw new java.lang.IllegalArgumentException();
-        }
+	if (field == null) {
+	    throw new java.lang.IllegalArgumentException();
+	}
 
-        switch (field) {
-            case SRC_PATH:
-                return isSetSrcPath();
-            case BUFFER:
-                return isSetBuffer();
-            case OFFSET:
-                return isSetOffset();
-        }
-        throw new java.lang.IllegalStateException();
+	switch (field) {
+	    case SRC_PATH:
+		return isSetSrcPath();
+	    case BUFFER:
+		return isSetBuffer();
+	    case OFFSET:
+		return isSetOffset();
+	}
+	throw new java.lang.IllegalStateException();
     }
 
     @Override
     public boolean equals(java.lang.Object that) {
-        if (that == null) {
-            return false;
-        }
-        if (that instanceof DataChunk) {
-            return this.equals((DataChunk) that);
-        }
-        return false;
+	if (that == null) {
+	    return false;
+	}
+	if (that instanceof DataChunk) {
+	    return this.equals((DataChunk) that);
+	}
+	return false;
     }
 
     public boolean equals(DataChunk that) {
-        if (that == null) {
-            return false;
-        }
-        if (this == that) {
-            return true;
-        }
+	if (that == null) {
+	    return false;
+	}
+	if (this == that) {
+	    return true;
+	}
 
-        boolean this_present_srcPath = true && this.isSetSrcPath();
-        boolean that_present_srcPath = true && that.isSetSrcPath();
-        if (this_present_srcPath || that_present_srcPath) {
-            if (!(this_present_srcPath && that_present_srcPath)) {
-                return false;
-            }
-            if (!this.srcPath.equals(that.srcPath)) {
-                return false;
-            }
-        }
+	boolean this_present_srcPath = true && this.isSetSrcPath();
+	boolean that_present_srcPath = true && that.isSetSrcPath();
+	if (this_present_srcPath || that_present_srcPath) {
+	    if (!(this_present_srcPath && that_present_srcPath)) {
+		return false;
+	    }
+	    if (!this.srcPath.equals(that.srcPath)) {
+		return false;
+	    }
+	}
 
-        boolean this_present_buffer = true && this.isSetBuffer();
-        boolean that_present_buffer = true && that.isSetBuffer();
-        if (this_present_buffer || that_present_buffer) {
-            if (!(this_present_buffer && that_present_buffer)) {
-                return false;
-            }
-            if (!this.buffer.equals(that.buffer)) {
-                return false;
-            }
-        }
+	boolean this_present_buffer = true && this.isSetBuffer();
+	boolean that_present_buffer = true && that.isSetBuffer();
+	if (this_present_buffer || that_present_buffer) {
+	    if (!(this_present_buffer && that_present_buffer)) {
+		return false;
+	    }
+	    if (!this.buffer.equals(that.buffer)) {
+		return false;
+	    }
+	}
 
-        boolean this_present_offset = true;
-        boolean that_present_offset = true;
-        if (this_present_offset || that_present_offset) {
-            if (!(this_present_offset && that_present_offset)) {
-                return false;
-            }
-            if (this.offset != that.offset) {
-                return false;
-            }
-        }
+	boolean this_present_offset = true;
+	boolean that_present_offset = true;
+	if (this_present_offset || that_present_offset) {
+	    if (!(this_present_offset && that_present_offset)) {
+		return false;
+	    }
+	    if (this.offset != that.offset) {
+		return false;
+	    }
+	}
 
-        return true;
+	return true;
     }
 
     @Override
     public int hashCode() {
-        int hashCode = 1;
+	int hashCode = 1;
 
-        hashCode = hashCode * 8191 + ((isSetSrcPath()) ? 131071 : 524287);
-        if (isSetSrcPath()) {
-            hashCode = hashCode * 8191 + srcPath.hashCode();
-        }
+	hashCode = hashCode * 8191 + ((isSetSrcPath()) ? 131071 : 524287);
+	if (isSetSrcPath()) {
+	    hashCode = hashCode * 8191 + srcPath.hashCode();
+	}
 
-        hashCode = hashCode * 8191 + ((isSetBuffer()) ? 131071 : 524287);
-        if (isSetBuffer()) {
-            hashCode = hashCode * 8191 + buffer.hashCode();
-        }
+	hashCode = hashCode * 8191 + ((isSetBuffer()) ? 131071 : 524287);
+	if (isSetBuffer()) {
+	    hashCode = hashCode * 8191 + buffer.hashCode();
+	}
 
-        hashCode = hashCode * 8191 + offset;
+	hashCode = hashCode * 8191 + offset;
 
-        return hashCode;
+	return hashCode;
     }
 
     @Override
     public int compareTo(DataChunk other) {
-        if (!getClass().equals(other.getClass())) {
-            return getClass().getName().compareTo(other.getClass().getName());
-        }
+	if (!getClass().equals(other.getClass())) {
+	    return getClass().getName().compareTo(other.getClass().getName());
+	}
 
-        int lastComparison = 0;
+	int lastComparison = 0;
 
-        lastComparison = java.lang.Boolean.valueOf(isSetSrcPath()).compareTo(other.isSetSrcPath());
-        if (lastComparison != 0) {
-            return lastComparison;
-        }
-        if (isSetSrcPath()) {
-            lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.srcPath, other.srcPath);
-            if (lastComparison != 0) {
-                return lastComparison;
-            }
-        }
-        lastComparison = java.lang.Boolean.valueOf(isSetBuffer()).compareTo(other.isSetBuffer());
-        if (lastComparison != 0) {
-            return lastComparison;
-        }
-        if (isSetBuffer()) {
-            lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buffer, other.buffer);
-            if (lastComparison != 0) {
-                return lastComparison;
-            }
-        }
-        lastComparison = java.lang.Boolean.valueOf(isSetOffset()).compareTo(other.isSetOffset());
-        if (lastComparison != 0) {
-            return lastComparison;
-        }
-        if (isSetOffset()) {
-            lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.offset, other.offset);
-            if (lastComparison != 0) {
-                return lastComparison;
-            }
-        }
-        return 0;
+	lastComparison = java.lang.Boolean.valueOf(isSetSrcPath()).compareTo(other.isSetSrcPath());
+	if (lastComparison != 0) {
+	    return lastComparison;
+	}
+	if (isSetSrcPath()) {
+	    lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.srcPath, other.srcPath);
+	    if (lastComparison != 0) {
+		return lastComparison;
+	    }
+	}
+	lastComparison = java.lang.Boolean.valueOf(isSetBuffer()).compareTo(other.isSetBuffer());
+	if (lastComparison != 0) {
+	    return lastComparison;
+	}
+	if (isSetBuffer()) {
+	    lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buffer, other.buffer);
+	    if (lastComparison != 0) {
+		return lastComparison;
+	    }
+	}
+	lastComparison = java.lang.Boolean.valueOf(isSetOffset()).compareTo(other.isSetOffset());
+	if (lastComparison != 0) {
+	    return lastComparison;
+	}
+	if (isSetOffset()) {
+	    lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.offset, other.offset);
+	    if (lastComparison != 0) {
+		return lastComparison;
+	    }
+	}
+	return 0;
     }
 
     @org.apache.thrift.annotation.Nullable
     public _Fields fieldForId(int fieldId) {
-        return _Fields.findByThriftId(fieldId);
+	return _Fields.findByThriftId(fieldId);
     }
 
     public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
-        scheme(iprot).read(iprot, this);
+	scheme(iprot).read(iprot, this);
     }
 
     public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
-        scheme(oprot).write(oprot, this);
+	scheme(oprot).write(oprot, this);
     }
 
     @Override
     public java.lang.String toString() {
-        java.lang.StringBuilder sb = new java.lang.StringBuilder("DataChunk(");
-        boolean first = true;
+	java.lang.StringBuilder sb = new java.lang.StringBuilder("DataChunk(");
+	boolean first = true;
 
-        sb.append("srcPath:");
-        if (this.srcPath == null) {
-            sb.append("null");
-        } else {
-            sb.append(this.srcPath);
-        }
-        first = false;
-        if (!first) {
-            sb.append(", ");
-        }
-        sb.append("buffer:");
-        if (this.buffer == null) {
-            sb.append("null");
-        } else {
-            org.apache.thrift.TBaseHelper.toString(this.buffer, sb);
-        }
-        first = false;
-        if (!first) {
-            sb.append(", ");
-        }
-        sb.append("offset:");
-        sb.append(this.offset);
-        first = false;
-        sb.append(")");
-        return sb.toString();
+	sb.append("srcPath:");
+	if (this.srcPath == null) {
+	    sb.append("null");
+	} else {
+	    sb.append(this.srcPath);
+	}
+	first = false;
+	if (!first) {
+	    sb.append(", ");
+	}
+	sb.append("buffer:");
+	if (this.buffer == null) {
+	    sb.append("null");
+	} else {
+	    org.apache.thrift.TBaseHelper.toString(this.buffer, sb);
+	}
+	first = false;
+	if (!first) {
+	    sb.append(", ");
+	}
+	sb.append("offset:");
+	sb.append(this.offset);
+	first = false;
+	sb.append(")");
+	return sb.toString();
     }
 
     public void validate() throws org.apache.thrift.TException {
-        // check for required fields
-        if (srcPath == null) {
-            throw new org.apache.thrift.protocol.TProtocolException("Required field 'srcPath' was not present! Struct: " + toString());
-        }
-        if (buffer == null) {
-            throw new org.apache.thrift.protocol.TProtocolException("Required field 'buffer' was not present! Struct: " + toString());
-        }
-        // alas, we cannot check 'offset' because it's a primitive and you chose the non-beans generator.
-        // check for sub-struct validity
+	// check for required fields
+	if (srcPath == null) {
+	    throw new org.apache.thrift.protocol.TProtocolException("Required field 'srcPath' was not present! Struct: " + toString());
+	}
+	if (buffer == null) {
+	    throw new org.apache.thrift.protocol.TProtocolException("Required field 'buffer' was not present! Struct: " + toString());
+	}
+	// alas, we cannot check 'offset' because it's a primitive and you chose the non-beans generator.
+	// check for sub-struct validity
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-        try {
-            write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
-        } catch (org.apache.thrift.TException te) {
-            throw new java.io.IOException(te);
-        }
+	try {
+	    write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+	} catch (org.apache.thrift.TException te) {
+	    throw new java.io.IOException(te);
+	}
     }
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
-        try {
-            // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-            __isset_bitfield = 0;
-            read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
-        } catch (org.apache.thrift.TException te) {
-            throw new java.io.IOException(te);
-        }
+	try {
+	    // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+	    __isset_bitfield = 0;
+	    read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+	} catch (org.apache.thrift.TException te) {
+	    throw new java.io.IOException(te);
+	}
     }
 
     private static class DataChunkStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
 
-        public DataChunkStandardScheme getScheme() {
-            return new DataChunkStandardScheme();
-        }
+	public DataChunkStandardScheme getScheme() {
+	    return new DataChunkStandardScheme();
+	}
     }
 
     private static class DataChunkStandardScheme extends org.apache.thrift.scheme.StandardScheme<DataChunk> {
 
-        public void read(org.apache.thrift.protocol.TProtocol iprot, DataChunk struct) throws org.apache.thrift.TException {
-            org.apache.thrift.protocol.TField schemeField;
-            iprot.readStructBegin();
-            while (true) {
-                schemeField = iprot.readFieldBegin();
-                if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
-                    break;
-                }
-                switch (schemeField.id) {
-                    case 1: // SRC_PATH
-                        if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                            struct.srcPath = iprot.readString();
-                            struct.setSrcPathIsSet(true);
-                        } else {
-                            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-                        }
-                        break;
-                    case 2: // BUFFER
-                        if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                            struct.buffer = iprot.readBinary();
-                            struct.setBufferIsSet(true);
-                        } else {
-                            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-                        }
-                        break;
-                    case 3: // OFFSET
-                        if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-                            struct.offset = iprot.readI32();
-                            struct.setOffsetIsSet(true);
-                        } else {
-                            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-                        }
-                        break;
-                    default:
-                        org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-                }
-                iprot.readFieldEnd();
-            }
-            iprot.readStructEnd();
+	public void read(org.apache.thrift.protocol.TProtocol iprot, DataChunk struct) throws org.apache.thrift.TException {
+	    org.apache.thrift.protocol.TField schemeField;
+	    iprot.readStructBegin();
+	    while (true) {
+		schemeField = iprot.readFieldBegin();
+		if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
+		    break;
+		}
+		switch (schemeField.id) {
+		    case 1: // SRC_PATH
+			if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+			    struct.srcPath = iprot.readString();
+			    struct.setSrcPathIsSet(true);
+			} else {
+			    org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+			}
+			break;
+		    case 2: // BUFFER
+			if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+			    struct.buffer = iprot.readBinary();
+			    struct.setBufferIsSet(true);
+			} else {
+			    org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+			}
+			break;
+		    case 3: // OFFSET
+			if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+			    struct.offset = iprot.readI32();
+			    struct.setOffsetIsSet(true);
+			} else {
+			    org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+			}
+			break;
+		    default:
+			org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+		}
+		iprot.readFieldEnd();
+	    }
+	    iprot.readStructEnd();
 
-            // check for required fields of primitive type, which can't be checked in the validate method
-            if (!struct.isSetOffset()) {
-                throw new org.apache.thrift.protocol.TProtocolException("Required field 'offset' was not found in serialized data! Struct: " + toString());
-            }
-            struct.validate();
-        }
+	    // check for required fields of primitive type, which can't be checked in the validate method
+	    if (!struct.isSetOffset()) {
+		throw new org.apache.thrift.protocol.TProtocolException("Required field 'offset' was not found in serialized data! Struct: " + toString());
+	    }
+	    struct.validate();
+	}
 
-        public void write(org.apache.thrift.protocol.TProtocol oprot, DataChunk struct) throws org.apache.thrift.TException {
-            struct.validate();
+	public void write(org.apache.thrift.protocol.TProtocol oprot, DataChunk struct) throws org.apache.thrift.TException {
+	    struct.validate();
 
-            oprot.writeStructBegin(STRUCT_DESC);
-            if (struct.srcPath != null) {
-                oprot.writeFieldBegin(SRC_PATH_FIELD_DESC);
-                oprot.writeString(struct.srcPath);
-                oprot.writeFieldEnd();
-            }
-            if (struct.buffer != null) {
-                oprot.writeFieldBegin(BUFFER_FIELD_DESC);
-                oprot.writeBinary(struct.buffer);
-                oprot.writeFieldEnd();
-            }
-            oprot.writeFieldBegin(OFFSET_FIELD_DESC);
-            oprot.writeI32(struct.offset);
-            oprot.writeFieldEnd();
-            oprot.writeFieldStop();
-            oprot.writeStructEnd();
-        }
+	    oprot.writeStructBegin(STRUCT_DESC);
+	    if (struct.srcPath != null) {
+		oprot.writeFieldBegin(SRC_PATH_FIELD_DESC);
+		oprot.writeString(struct.srcPath);
+		oprot.writeFieldEnd();
+	    }
+	    if (struct.buffer != null) {
+		oprot.writeFieldBegin(BUFFER_FIELD_DESC);
+		oprot.writeBinary(struct.buffer);
+		oprot.writeFieldEnd();
+	    }
+	    oprot.writeFieldBegin(OFFSET_FIELD_DESC);
+	    oprot.writeI32(struct.offset);
+	    oprot.writeFieldEnd();
+	    oprot.writeFieldStop();
+	    oprot.writeStructEnd();
+	}
 
     }
 
     private static class DataChunkTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
 
-        public DataChunkTupleScheme getScheme() {
-            return new DataChunkTupleScheme();
-        }
+	public DataChunkTupleScheme getScheme() {
+	    return new DataChunkTupleScheme();
+	}
     }
 
     private static class DataChunkTupleScheme extends org.apache.thrift.scheme.TupleScheme<DataChunk> {
 
-        @Override
-        public void write(org.apache.thrift.protocol.TProtocol prot, DataChunk struct) throws org.apache.thrift.TException {
-            org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-            oprot.writeString(struct.srcPath);
-            oprot.writeBinary(struct.buffer);
-            oprot.writeI32(struct.offset);
-        }
+	@Override
+	public void write(org.apache.thrift.protocol.TProtocol prot, DataChunk struct) throws org.apache.thrift.TException {
+	    org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+	    oprot.writeString(struct.srcPath);
+	    oprot.writeBinary(struct.buffer);
+	    oprot.writeI32(struct.offset);
+	}
 
-        @Override
-        public void read(org.apache.thrift.protocol.TProtocol prot, DataChunk struct) throws org.apache.thrift.TException {
-            org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-            struct.srcPath = iprot.readString();
-            struct.setSrcPathIsSet(true);
-            struct.buffer = iprot.readBinary();
-            struct.setBufferIsSet(true);
-            struct.offset = iprot.readI32();
-            struct.setOffsetIsSet(true);
-        }
+	@Override
+	public void read(org.apache.thrift.protocol.TProtocol prot, DataChunk struct) throws org.apache.thrift.TException {
+	    org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+	    struct.srcPath = iprot.readString();
+	    struct.setSrcPathIsSet(true);
+	    struct.buffer = iprot.readBinary();
+	    struct.setBufferIsSet(true);
+	    struct.offset = iprot.readI32();
+	    struct.setOffsetIsSet(true);
+	}
     }
 
     private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
-        return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+	return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
     }
 }

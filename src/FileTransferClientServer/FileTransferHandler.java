@@ -54,8 +54,8 @@ public class FileTransferHandler implements FileTransfer.Iface {
     private final HashMap<String, Integer> countRecords;
 
     public FileTransferHandler() {
-        this.headerList = new HashMap();
-        this.countRecords = new HashMap();
+	this.headerList = new HashMap();
+	this.countRecords = new HashMap();
     }
 
     /**
@@ -66,18 +66,18 @@ public class FileTransferHandler implements FileTransfer.Iface {
      */
     @Override
     public void sendMetaData(Metadata header) throws TException {
-        System.out.println("Received header of src file: " + header.srcPath);
-        // Add the metadata to the list
-        if (!this.headerList.containsKey(header.srcPath)) {
-            try {
-                this.headerList.put(header.srcPath, header);
-                this.countRecords.put(header.srcPath, 0);
-                RandomAccessFile writer = new RandomAccessFile(header.desPath, "rw");
-                writer.setLength(header.size);
-            } catch (IOException ex) {
-                Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+	System.out.println("Received header of src file: " + header.srcPath);
+	// Add the metadata to the list
+	if (!this.headerList.containsKey(header.srcPath)) {
+	    try {
+		this.headerList.put(header.srcPath, header);
+		this.countRecords.put(header.srcPath, 0);
+		RandomAccessFile writer = new RandomAccessFile(header.desPath, "rw");
+		writer.setLength(header.size);
+	    } catch (IOException ex) {
+		Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
+	    }
+	}
     }
 
     /**
@@ -88,21 +88,20 @@ public class FileTransferHandler implements FileTransfer.Iface {
      */
     @Override
     public void sendDataChunk(DataChunk chunk) throws TException {
-        if (!this.headerList.containsKey(chunk.srcPath)) {
-            return;
-        }
+	if (!this.headerList.containsKey(chunk.srcPath)) {
+	    return;
+	}
 
-        try {
-            this.countRecords.put(chunk.srcPath, this.countRecords.get(chunk.srcPath) + 1);
-            this.writeToFile(chunk.srcPath, chunk.buffer, chunk.offset);
-        } catch (IOException ex) {
-            Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
+	try {
+	    this.countRecords.put(chunk.srcPath, this.countRecords.get(chunk.srcPath) + 1);
+	    this.writeToFile(chunk.srcPath, chunk.buffer, chunk.offset);
+	} catch (IOException ex) {
+	    Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
+	}
     }
 
     /**
-     * Override the method, handle updating the checksum of the file and then
-     * write to file
+     * Override the method, handle updating the checksum of the file and then write to file
      *
      * @param srcPath
      * @param checkSum
@@ -110,10 +109,10 @@ public class FileTransferHandler implements FileTransfer.Iface {
      */
     @Override
     public void updateChecksum(String srcPath, long checkSum) throws TException {
-        if (!this.headerList.containsKey(srcPath)) {
-            return;
-        }
-        this.headerList.get(srcPath).checkSum = checkSum;
+	if (!this.headerList.containsKey(srcPath)) {
+	    return;
+	}
+	this.headerList.get(srcPath).checkSum = checkSum;
     }
 
     /**
@@ -125,65 +124,64 @@ public class FileTransferHandler implements FileTransfer.Iface {
      * @throws IOException
      */
     public void writeToFile(String srcPath, ByteBuffer buffer, int offset) throws IOException {
-        // Write output to file
-        try (RandomAccessFile writer = new RandomAccessFile(this.headerList.get(srcPath).desPath, "rw")) {
-            writer.seek(offset * fileTransferConstants.CHUNK_MAX_SIZE);
-            System.out.println(writer.getFilePointer());
-            writer.write(buffer.array());
-        }
+	// Write output to file
+	try (RandomAccessFile writer = new RandomAccessFile(this.headerList.get(srcPath).desPath, "rw")) {
+	    writer.seek(offset * fileTransferConstants.CHUNK_MAX_SIZE);
+            writer.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
+	    writer.close();
+	}
 
-        // Delete the data related to the file on disk and memory if completed
-        if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
-            try {
-                if (this.checkSum(srcPath)) {
-                    System.out.println(" [x] Write to file: " + this.headerList.get(srcPath).desPath);
-                    this.headerList.remove(srcPath);
-                } else {
-                    File file = new File(this.headerList.get(srcPath).desPath);
-                    file.delete();
-                    System.err.println(" [ERROR] Writing to " + this.headerList.get(srcPath).desPath + " failed.");
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+	// Delete the data related to the file on disk and memory if completed
+	if (this.countRecords.get(srcPath) == this.headerList.get(srcPath).numOfChunks) {
+	    try {
+		if (this.checkSum(srcPath)) {
+		    System.out.println(" [x] Write to file: " + this.headerList.get(srcPath).desPath);
+		    this.headerList.remove(srcPath);
+		} else {
+		    File file = new File(this.headerList.get(srcPath).desPath);
+		    file.delete();
+		    System.err.println(" [ERROR] Writing to " + this.headerList.get(srcPath).desPath + " failed.");
+		}
+	    } catch (IOException ex) {
+		Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
+	    }
+	}
     }
 
     /**
      * Check sum of the file given a new data chunk
      *
      * @param srcPath file source path
-     * @return boolean: true if match the checksum in the metadata, otherwise,
-     * false
+     * @return boolean: true if match the checksum in the metadata, otherwise, false
      * @throws java.io.IOException
      */
     public boolean checkSum(String srcPath) throws IOException {
-        Adler32 checkSumGen = new Adler32();
-        int numOfChunks = this.headerList.get(srcPath).numOfChunks;
-        File desFile = new File(this.headerList.get(srcPath).desPath);
+	Adler32 checkSumGen = new Adler32();
+	int numOfChunks = this.headerList.get(srcPath).numOfChunks;
+	File desFile = new File(this.headerList.get(srcPath).desPath);
 
-        try (FileChannel readChannel = new FileInputStream(desFile).getChannel()) {
-            for (int i = 0; i < numOfChunks; ++i) {
-                ByteBuffer byteChunk;
-                if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
-                    byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
-                } else {
-                    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
-                }
-                readChannel.read(byteChunk);
+        // Update the checksum chunk by chunk to avoid the out of memory situation
+	try (FileChannel readChannel = new FileInputStream(desFile).getChannel()) {
+	    for (int i = 0; i < numOfChunks; ++i) {
+		ByteBuffer byteChunk;
+		if ((readChannel.size() - readChannel.position()) < fileTransferConstants.CHUNK_MAX_SIZE) {
+		    byteChunk = ByteBuffer.allocate((int) (readChannel.size() - readChannel.position()));
+		} else {
+		    byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);
+		}
+		readChannel.read(byteChunk);
 
-                // Get rid of unused bytes
-                if (byteChunk.position() < byteChunk.limit()) {
-                    byteChunk.limit(byteChunk.position());
-                }
-                byteChunk.rewind();
+		// Get rid of unused bytes
+		if (byteChunk.position() < byteChunk.limit()) {
+		    byteChunk.limit(byteChunk.position());
+		}
+		byteChunk.rewind();
 
-                // Update the checksum
-                checkSumGen.update(byteChunk);
-                byteChunk.rewind();
-            }
-        }
+		// Update the checksum
+		checkSumGen.update(byteChunk);
+	    }
+	}
 
-        return checkSumGen.getValue() == this.headerList.get(srcPath).checkSum;
+	return checkSumGen.getValue() == this.headerList.get(srcPath).checkSum;
     }
 }

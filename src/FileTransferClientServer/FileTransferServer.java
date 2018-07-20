@@ -44,30 +44,30 @@ import org.apache.thrift.transport.TTransportException;
 public class FileTransferServer {
 
     public static Thread createThread(int port) {
-        return new Thread(() -> {
-            FileTransferHandler handler = new FileTransferHandler();
-            FileTransfer.Processor processor = new FileTransfer.Processor(handler);
-            try {
-                TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
-                THsHaServer.Args args = new THsHaServer.Args(socket);
-                args.protocolFactory(new TBinaryProtocol.Factory());
-                args.transportFactory(new TFramedTransport.Factory());
-                args.processorFactory(new TProcessorFactory(processor));
-                
-                TServer server = new THsHaServer(args);
-                server.serve();
-                
-            } catch (TTransportException ex) {
-                Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
+	return new Thread(() -> {
+	    FileTransferHandler handler = new FileTransferHandler();
+	    FileTransfer.Processor processor = new FileTransfer.Processor(handler);
+	    try {
+		TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
+		THsHaServer.Args args = new THsHaServer.Args(socket);
+		args.protocolFactory(new TBinaryProtocol.Factory());
+		args.transportFactory(new TFramedTransport.Factory());
+		args.processorFactory(new TProcessorFactory(processor));
+
+		TServer server = new THsHaServer(args);
+		server.serve();
+
+	    } catch (TTransportException ex) {
+		Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
+	    }
+	});
     }
 
     public static void main(String[] argv) {
-        int numOfServers = 1;
-        int port = 9000;
-        for (int i = 0; i < numOfServers; ++i) {
-            createThread(port++).start();
-        }
+	int numOfServers = 1;
+	int port = 9000;
+	for (int i = 0; i < numOfServers; ++i) {
+	    createThread(port++).start();
+	}
     }
 }
