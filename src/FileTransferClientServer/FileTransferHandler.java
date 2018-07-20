@@ -73,25 +73,25 @@ public class FileTransferHandler implements FileTransfer.Iface {
         // Add the metadata to the list
         if (!this.headerList.containsKey(header.srcPath)) {
             this.headerList.put(header.srcPath, header);
+            this.countRecords.put(header.srcPath, 0);
         }
         File desFile = new File(header.desPath);
+        List<List<Long>> checksumList = new ArrayList();
 
         // Check if the destination file already exists
         if (!desFile.exists()) {
             // If not, create a new file
-            this.countRecords.put(header.srcPath, 0);
             try {
                 RandomAccessFile writer = new RandomAccessFile(header.desPath, "rw");
                 writer.setLength(header.size);
             } catch (IOException ex) {
                 Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
-            return null;
+            return checksumList;
         } else {
             // If exist, return the HashMap contains checksums of chunks obtained by splitting the destination file
             // list[i][0]: offset where the i-th chunk starts
             // list[i][1]: checksum of bytes in the i-th chunk
-            List<List<Long>> checksumList = new ArrayList();
             try {
                 Adler32 checksumGen = new Adler32();
                 FileChannel reader = new FileInputStream(desFile).getChannel();
@@ -117,6 +117,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
                     checksumList.add(checksumChunk);
                     
                     checksumGen.reset();
+                    offset = reader.position();
                 }
             } catch (IOException ex) {
                 Logger.getLogger(FileTransferHandler.class.getName()).log(Level.SEVERE, null, ex);
