@@ -33,6 +33,8 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TFastFramedTransport;
+import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.transport.TTransportException;
@@ -51,7 +53,7 @@ public class FileTransferServer {
 		TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
 		THsHaServer.Args args = new THsHaServer.Args(socket);
 		args.protocolFactory(new TBinaryProtocol.Factory());
-		args.transportFactory(new TFramedTransport.Factory());
+		args.transportFactory(new TFastFramedTransport.Factory(fileTransferConstants.CHUNK_MAX_SIZE, 10485760));
 		args.processorFactory(new TProcessorFactory(processor));
 
 		TServer server = new THsHaServer(args);
@@ -64,10 +66,25 @@ public class FileTransferServer {
     }
 
     public static void main(String[] argv) {
-	int numOfServers = 1;
+	//int numOfServers = 1;
 	int port = 9000;
-	for (int i = 0; i < numOfServers; ++i) {
+	/*for (int i = 0; i < numOfServers; ++i) {
 	    createThread(port++).start();
-	}
+	}*/
+        FileTransferHandler handler = new FileTransferHandler();
+	    FileTransfer.Processor processor = new FileTransfer.Processor(handler);
+	    try {
+		TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
+		THsHaServer.Args args = new THsHaServer.Args(socket);
+		args.protocolFactory(new TBinaryProtocol.Factory());
+		args.transportFactory(new TFramedTransport.Factory());
+		args.processorFactory(new TProcessorFactory(processor));
+
+		TServer server = new THsHaServer(args);
+		server.serve();
+
+	    } catch (TTransportException ex) {
+		Logger.getLogger(FileTransferServer.class.getName()).log(Level.SEVERE, null, ex);
+	    }
     }
 }

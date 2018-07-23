@@ -72,28 +72,28 @@ public class FileTransferClient {
             List<List<Long>> checksumList = client.sendMetaData(header);
             if (desFile.length() == srcFile.length()) {
                 if (checksumList.isEmpty()) {
-                    sendWholeFile(client, srcPath, desPath);
+                    sendWholeFile(client, header);
                 } else {
-                    sendPartialFile(client, srcPath, desPath, checksumList);
+                    sendPartialFile(client, header, checksumList);
                 }
             } else {
-                sendWholeFile(client, srcPath, desPath);
+                sendWholeFile(client, header);
             }
         } else {
             // Case NO, send the whole file
             long numberOfChunks = srcFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
             Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, srcFile.length());
             client.sendMetaData(header);
-            sendWholeFile(client, srcPath, desPath);
+            sendWholeFile(client, header);
         }
     }
 
-    public static void sendPartialFile(FileTransfer.Client client, String srcPath, String desPath, List<List<Long>> checksumList) throws TException {
+    public static void sendPartialFile(FileTransfer.Client client, Metadata header, List<List<Long>> checksumList) throws TException {
         Adler32 checksumGen = new Adler32();
         Adler32 totalChecksum = new Adler32();
         long count = 0;
-        try (FileChannel reader = new RandomAccessFile(srcPath, "r").getChannel()) {
-            long numberOfChunks = reader.size() / fileTransferConstants.CHUNK_MAX_SIZE;
+        try (FileChannel reader = new RandomAccessFile(header.srcPath, "r").getChannel()) {
+            long numberOfChunks = reader.size() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
             for (int i = 0; i < checksumList.size(); ++i) {
                 long offset = checksumList.get(i).get(0);
                 reader.position(offset);
@@ -112,16 +112,15 @@ public class FileTransferClient {
                 totalChecksum.update(byteChunk);
                 if (checksumGen.getValue() != checksumList.get(i).get(1)) {
                     byteChunk.rewind();
-                    DataChunk chunk = new DataChunk(srcPath, byteChunk, offset);
+                    DataChunk chunk = new DataChunk(header.srcPath, byteChunk, offset);
                     client.sendDataChunk(chunk);
                     count++;
                 }
 
                 checksumGen.reset();
             }
-            Metadata header = new Metadata(srcPath, desPath, 0, count, reader.size());
             client.sendMetaData(header);
-            client.updateChecksum(srcPath, totalChecksum.getValue());
+            client.updateChecksum(header.srcPath, totalChecksum.getValue());
             System.out.println("Sent " + count + "/" + numberOfChunks + " chunks.");
             reader.close();
         } catch (IOException ex) {
@@ -129,11 +128,11 @@ public class FileTransferClient {
         }
     }
 
-    public static void sendWholeFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
+    public static void sendWholeFile(FileTransfer.Client client, Metadata header) throws TException {
         Adler32 checksumGen = new Adler32();
 
         // Try to open and read the file 
-        try (FileChannel reader = new RandomAccessFile(srcPath, "r").getChannel()) {
+        try (FileChannel reader = new RandomAccessFile(header.srcPath, "r").getChannel()) {
             long offset = 0;
             // Parse the file into smaller chunks and send them
             do {
@@ -152,11 +151,11 @@ public class FileTransferClient {
                 byteChunk.rewind();
 
                 // Create a data chunk and send it
-                DataChunk chunk = new DataChunk(srcPath, byteChunk, offset);
+                DataChunk chunk = new DataChunk(header.srcPath, byteChunk, offset);
                 client.sendDataChunk(chunk);
                 offset = reader.position();
             } while (offset < reader.size());
-            client.updateChecksum(srcPath, checksumGen.getValue());
+            client.updateChecksum(header.srcPath, checksumGen.getValue());
             reader.close();
 
         } catch (IOException ex) {
@@ -183,6 +182,7 @@ public class FileTransferClient {
             }
         });
     }*/
+    
     public static void main(String[] argv) throws IOException {
         TTransport transport;
         transport = new TFramedTransport(new TSocket("localhost", 9000));

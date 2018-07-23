@@ -1,7 +1,7 @@
 namespace java FileTransfer
 namespace cpp FileTransfer
 
-const i32 CHUNK_MAX_SIZE = 700; // the maximum size allowed in 1 data chunk
+const i32 CHUNK_MAX_SIZE = 16384; // the maximum size allowed in 1 data chunk
 
 // The metadata of a file 
 struct Metadata {
