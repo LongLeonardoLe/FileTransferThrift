@@ -53,7 +53,7 @@ public class FileTransferServer {
 		TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
 		THsHaServer.Args args = new THsHaServer.Args(socket);
 		args.protocolFactory(new TBinaryProtocol.Factory());
-		args.transportFactory(new TFastFramedTransport.Factory(fileTransferConstants.CHUNK_MAX_SIZE, 10485760));
+		args.transportFactory(new TFramedTransport.Factory());
 		args.processorFactory(new TProcessorFactory(processor));
 
 		TServer server = new THsHaServer(args);
