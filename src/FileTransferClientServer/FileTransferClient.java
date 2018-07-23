@@ -62,21 +62,29 @@ public class FileTransferClient {
     public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
         File srcFile = new File(srcPath);
         File desFile = new File(desPath);
-        long numberOfChunks = srcFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
-        Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, srcFile.length());
-        List<List<Long>> checksumList = client.sendMetaData(header);
+        // Check if the destination file already exists
         if (desFile.exists()) {
+            // Case YES
+            // check if the destination and source files have the same size
+            // If so, compare checksum of chunks in both files
+            long numberOfChunks = srcFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
+            Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, srcFile.length());
+            List<List<Long>> checksumList = client.sendMetaData(header);
             if (desFile.length() == srcFile.length()) {
-                return;
+                if (checksumList.isEmpty()) {
+                    sendWholeFile(client, srcPath, desPath);
+                } else {
+                    sendPartialFile(client, srcPath, desPath, checksumList);
+                }
             } else {
                 sendWholeFile(client, srcPath, desPath);
-                return;
             }
-        }
-        if (checksumList.isEmpty()) {
-            sendWholeFile(client, srcPath, desPath);
         } else {
-            sendPartialFile(client, srcPath, desPath, checksumList);
+            // Case NO, send the whole file
+            long numberOfChunks = srcFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
+            Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, srcFile.length());
+            client.sendMetaData(header);
+            sendWholeFile(client, srcPath, desPath);
         }
     }
 
