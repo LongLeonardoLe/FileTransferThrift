@@ -28,6 +28,7 @@ import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.TByteArrayOutputStream;
 
 import java.io.FileInputStream;
 import java.io.File;
@@ -49,6 +50,9 @@ import org.apache.thrift.TException;
  * @author Long Le <longlnt@vng.com.vn>
  */
 public class FileTransferClient {
+
+    // The bandwidth limit for I/O and network transport
+    private static int bwlimit = 10485760;
 
     /**
      * Take source path, destination path, obtain the metadata and send it first, then parse the
@@ -92,6 +96,9 @@ public class FileTransferClient {
         Adler32 checksumGen = new Adler32();
         Adler32 totalChecksum = new Adler32();
         long count = 0;
+        int outputBufferSize = 0;
+        long time = System.currentTimeMillis();
+        
         try (FileChannel reader = new RandomAccessFile(header.srcPath, "r").getChannel()) {
             long numberOfChunks = reader.size() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
             for (int i = 0; i < checksumList.size(); ++i) {
@@ -105,7 +112,7 @@ public class FileTransferClient {
                     byteChunk.limit(byteChunk.position());
                 }
                 byteChunk.rewind();
-
+                
                 // Calculate the checksum of the chunk, if different, send the chunk, otherwise skip
                 checksumGen.update(byteChunk);
                 byteChunk.rewind();
@@ -117,18 +124,30 @@ public class FileTransferClient {
                     count++;
                 }
 
+                // Check whether it exceeds the limit of bytes in 1 s
+                outputBufferSize += byteChunk.array().length;
+                if (outputBufferSize >= bwlimit) {
+                    long timespan = System.currentTimeMillis() - time;
+                    if (timespan < 1000) {
+                        outputBufferSize = 0;
+                        Thread.sleep(1000 - timespan);
+                    }
+                    time = System.currentTimeMillis();
+                }
+
                 checksumGen.reset();
             }
-            client.sendMetaData(header);
             client.updateChecksum(header.srcPath, totalChecksum.getValue());
             System.out.println("Sent " + count + "/" + numberOfChunks + " chunks.");
             reader.close();
-        } catch (IOException ex) {
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public static void sendWholeFile(FileTransfer.Client client, Metadata header) throws TException {
+        long time = System.currentTimeMillis();
+        int outputBufferSize = 0;
         Adler32 checksumGen = new Adler32();
 
         // Try to open and read the file 
@@ -153,12 +172,24 @@ public class FileTransferClient {
                 // Create a data chunk and send it
                 DataChunk chunk = new DataChunk(header.srcPath, byteChunk, offset);
                 client.sendDataChunk(chunk);
+                
+                // Check whether it exceeds the limit of bytes in 1 s
+                outputBufferSize += byteChunk.array().length;
+                if (outputBufferSize >= bwlimit) {
+                    long timespan = System.currentTimeMillis() - time;
+                    if (timespan < 1000) {
+                        outputBufferSize = 0;
+                        Thread.sleep(1000 - timespan);
+                    }
+                    time = System.currentTimeMillis();
+                }
+
                 offset = reader.position();
             } while (offset < reader.size());
             client.updateChecksum(header.srcPath, checksumGen.getValue());
             reader.close();
 
-        } catch (IOException ex) {
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
