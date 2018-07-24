@@ -61,9 +61,10 @@ public class FileTransferClient {
      * @param client
      * @param srcPath path to the source file
      * @param desPath path to the destination file
+     * @param isBwlimitSet
      * @throws TException
      */
-    public static void sendFile(FileTransfer.Client client, String srcPath, String desPath) throws TException {
+    public static void sendFile(FileTransfer.Client client, String srcPath, String desPath, boolean isBwlimitSet) throws TException {
         File srcFile = new File(srcPath);
         File desFile = new File(desPath);
         // Check if the destination file already exists
@@ -76,29 +77,29 @@ public class FileTransferClient {
             List<List<Long>> checksumList = client.sendMetaData(header);
             if (desFile.length() == srcFile.length()) {
                 if (checksumList.isEmpty()) {
-                    sendWholeFile(client, header);
+                    sendWholeFile(client, header, isBwlimitSet);
                 } else {
-                    sendPartialFile(client, header, checksumList);
+                    sendPartialFile(client, header, checksumList, isBwlimitSet);
                 }
             } else {
-                sendWholeFile(client, header);
+                sendWholeFile(client, header, isBwlimitSet);
             }
         } else {
             // Case NO, send the whole file
             long numberOfChunks = srcFile.length() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
             Metadata header = new Metadata(srcPath, desPath, 0, numberOfChunks, srcFile.length());
             client.sendMetaData(header);
-            sendWholeFile(client, header);
+            sendWholeFile(client, header, isBwlimitSet);
         }
     }
 
-    public static void sendPartialFile(FileTransfer.Client client, Metadata header, List<List<Long>> checksumList) throws TException {
+    public static void sendPartialFile(FileTransfer.Client client, Metadata header, List<List<Long>> checksumList, boolean isBwlimitSet) throws TException {
         Adler32 checksumGen = new Adler32();
         Adler32 totalChecksum = new Adler32();
         long count = 0;
         int outputBufferSize = 0;
         long time = System.currentTimeMillis();
-        
+
         try (FileChannel reader = new RandomAccessFile(header.srcPath, "r").getChannel()) {
             long numberOfChunks = reader.size() / fileTransferConstants.CHUNK_MAX_SIZE + 1;
             for (int i = 0; i < checksumList.size(); ++i) {
@@ -112,7 +113,7 @@ public class FileTransferClient {
                     byteChunk.limit(byteChunk.position());
                 }
                 byteChunk.rewind();
-                
+
                 // Calculate the checksum of the chunk, if different, send the chunk, otherwise skip
                 checksumGen.update(byteChunk);
                 byteChunk.rewind();
@@ -125,14 +126,16 @@ public class FileTransferClient {
                 }
 
                 // Check whether it exceeds the limit of bytes in 1 s
-                outputBufferSize += byteChunk.array().length;
-                if (outputBufferSize >= bwlimit) {
-                    long timespan = System.currentTimeMillis() - time;
-                    if (timespan < 1000) {
-                        outputBufferSize = 0;
-                        Thread.sleep(1000 - timespan);
+                if (isBwlimitSet) {
+                    outputBufferSize += byteChunk.array().length;
+                    if (outputBufferSize >= bwlimit) {
+                        long timespan = System.currentTimeMillis() - time;
+                        if (timespan < 1000) {
+                            outputBufferSize = 0;
+                            Thread.sleep(1000 - timespan);
+                        }
+                        time = System.currentTimeMillis();
                     }
-                    time = System.currentTimeMillis();
                 }
 
                 checksumGen.reset();
@@ -145,7 +148,7 @@ public class FileTransferClient {
         }
     }
 
-    public static void sendWholeFile(FileTransfer.Client client, Metadata header) throws TException {
+    public static void sendWholeFile(FileTransfer.Client client, Metadata header, boolean isBwlimitSet) throws TException {
         long time = System.currentTimeMillis();
         int outputBufferSize = 0;
         Adler32 checksumGen = new Adler32();
@@ -172,16 +175,18 @@ public class FileTransferClient {
                 // Create a data chunk and send it
                 DataChunk chunk = new DataChunk(header.srcPath, byteChunk, offset);
                 client.sendDataChunk(chunk);
-                
+
                 // Check whether it exceeds the limit of bytes in 1 s
-                outputBufferSize += byteChunk.array().length;
-                if (outputBufferSize >= bwlimit) {
-                    long timespan = System.currentTimeMillis() - time;
-                    if (timespan < 1000) {
-                        outputBufferSize = 0;
-                        Thread.sleep(1000 - timespan);
+                if (isBwlimitSet) {
+                    outputBufferSize += byteChunk.array().length;
+                    if (outputBufferSize >= bwlimit) {
+                        long timespan = System.currentTimeMillis() - time;
+                        if (timespan < 1000) {
+                            outputBufferSize = 0;
+                            Thread.sleep(1000 - timespan);
+                        }
+                        time = System.currentTimeMillis();
                     }
-                    time = System.currentTimeMillis();
                 }
 
                 offset = reader.position();
@@ -213,15 +218,25 @@ public class FileTransferClient {
             }
         });
     }*/
-    
     public static void main(String[] argv) throws IOException {
         TTransport transport;
         transport = new TFramedTransport(new TSocket("localhost", 9000));
         TProtocol protocol = new TBinaryProtocol(transport);
         FileTransfer.Client client = new FileTransfer.Client(protocol);
+        boolean isBwlimitSet = false;
+        for (String str : argv) {
+            if (str.contains("--bwlimit=")) {
+                int limit = Integer.getInteger(str.substring(str.indexOf("=")));
+                if (limit == 0) {
+                    break;
+                }
+                isBwlimitSet = true;
+                bwlimit = limit;
+            }
+        }
         try {
             transport.open();
-            sendFile(client, "/home/cpu10360/Desktop/102flowers.tgz", "/home/cpu10360/Desktop/test.tgz");
+            sendFile(client, "/home/cpu10360/Desktop/102flowers.tgz", "/home/cpu10360/Desktop/test.tgz", isBwlimitSet);
 
         } catch (TException ex) {
             Logger.getLogger(FileTransferClient.class.getName()).log(Level.SEVERE, null, ex);
