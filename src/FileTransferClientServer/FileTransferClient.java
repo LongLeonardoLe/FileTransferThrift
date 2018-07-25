@@ -215,20 +215,20 @@ public class FileTransferClient {
             }
         });
     }*/
-    public static void main(String[] argv) throws IOException {
+    public static void main(String[] args) throws IOException {
         TTransport transport;
         transport = new TFramedTransport(new TSocket("localhost", 9000));
         TProtocol protocol = new TBinaryProtocol(transport);
         FileTransfer.Client client = new FileTransfer.Client(protocol);
         boolean isBwlimitSet = false;
-        for (String str : argv) {
-            if (str.contains("--bwlimit=")) {
-                int limit = Integer.getInteger(str.substring(str.indexOf("=")));
+        for (int i = 0; i < args.length; ++i) {
+            if (args[i].contains("--bwlimit=")) {
+                int limit = Integer.parseInt(args[i].substring(args[i].indexOf("=")+1));
                 if (limit == 0) {
                     break;
                 }
                 isBwlimitSet = true;
-                bwlimit = limit;
+                bwlimit = limit * 1024;
             }
         }
         try {

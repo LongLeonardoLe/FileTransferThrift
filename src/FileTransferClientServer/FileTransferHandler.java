@@ -23,7 +23,10 @@
  */
 package FileTransferClientServer;
 
-import FileTransfer.*;
+import FileTransfer.DataChunk;
+import FileTransfer.Metadata;
+import FileTransfer.fileTransferConstants;
+import FileTransfer.FileTransfer;
 
 import org.apache.thrift.TException;
 
