@@ -23,23 +23,22 @@
  */
 package FileTransferClientServer;
 
-import FileTransfer.*;
+import FileTransfer.DataChunk;
+import FileTransfer.Metadata;
+import FileTransfer.fileTransferConstants;
+import FileTransfer.FileTransfer;
 
 import org.apache.thrift.TException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.Adler32;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -94,7 +93,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
             // list[i][1]: checksum of bytes in the i-th chunk
             try {
                 Adler32 checksumGen = new Adler32();
-                FileChannel reader = new FileInputStream(desFile).getChannel();
+                FileChannel reader = new RandomAccessFile(desFile, "r").getChannel();
                 long offset = 0;
                 while (offset < reader.size()) {
                     // Read bytes of the chunk into the buffer
@@ -198,6 +197,22 @@ public class FileTransferHandler implements FileTransfer.Iface {
     }
 
     /**
+     * Write the buffer to file
+     *
+     * @param srcPath
+     * @param buffer bytes to be written
+     * @param offset
+     * @throws IOException
+     */
+    public void writeToFile(String srcPath, ByteBuffer buffer, int offset) throws IOException {
+	// Write output to file
+	try (RandomAccessFile writer = new RandomAccessFile(this.headerList.get(srcPath).desPath, "rw")) {
+	    writer.seek(offset * fileTransferConstants.CHUNK_MAX_SIZE);
+            writer.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
+	}
+    }
+
+    /**
      * Check sum of the file given a new data chunk
      *
      * @param srcPath file source path
@@ -209,7 +224,7 @@ public class FileTransferHandler implements FileTransfer.Iface {
         File desFile = new File(this.headerList.get(srcPath).desPath);
 
         // Update the checksum chunk by chunk to avoid the out of memory situation
-        try (FileChannel readChannel = new FileInputStream(desFile).getChannel()) {
+        try (FileChannel readChannel = new RandomAccessFile(desFile, "r").getChannel()) {
             long offset = 0;
             while (offset < this.headerList.get(srcPath).size) {
                 ByteBuffer byteChunk = ByteBuffer.allocate(fileTransferConstants.CHUNK_MAX_SIZE);

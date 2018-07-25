@@ -28,14 +28,11 @@ import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.TByteArrayOutputStream;
 
-import java.io.FileInputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -218,20 +215,20 @@ public class FileTransferClient {
             }
         });
     }*/
-    public static void main(String[] argv) throws IOException {
+    public static void main(String[] args) throws IOException {
         TTransport transport;
         transport = new TFramedTransport(new TSocket("localhost", 9000));
         TProtocol protocol = new TBinaryProtocol(transport);
         FileTransfer.Client client = new FileTransfer.Client(protocol);
         boolean isBwlimitSet = false;
-        for (String str : argv) {
-            if (str.contains("--bwlimit=")) {
-                int limit = Integer.getInteger(str.substring(str.indexOf("=")));
+        for (int i = 0; i < args.length; ++i) {
+            if (args[i].contains("--bwlimit=")) {
+                int limit = Integer.parseInt(args[i].substring(args[i].indexOf("=")+1));
                 if (limit == 0) {
                     break;
                 }
                 isBwlimitSet = true;
-                bwlimit = limit;
+                bwlimit = limit * 1024;
             }
         }
         try {

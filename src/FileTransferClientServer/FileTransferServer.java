@@ -23,7 +23,7 @@
  */
 package FileTransferClientServer;
 
-import FileTransfer.*;
+import FileTransfer.FileTransfer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +65,7 @@ public class FileTransferServer {
 	});
     }
 
-    public static void main(String[] argv) {
+    public static void main(String[] args) {
 	//int numOfServers = 1;
 	int port = 9000;
 	/*for (int i = 0; i < numOfServers; ++i) {
@@ -75,12 +75,12 @@ public class FileTransferServer {
 	    FileTransfer.Processor processor = new FileTransfer.Processor(handler);
 	    try {
 		TNonblockingServerSocket socket = new TNonblockingServerSocket(port);
-		THsHaServer.Args args = new THsHaServer.Args(socket);
-		args.protocolFactory(new TBinaryProtocol.Factory());
-		args.transportFactory(new TFramedTransport.Factory());
-		args.processorFactory(new TProcessorFactory(processor));
+		THsHaServer.Args arg = new THsHaServer.Args(socket);
+		arg.protocolFactory(new TBinaryProtocol.Factory());
+		arg.transportFactory(new TFramedTransport.Factory());
+		arg.processorFactory(new TProcessorFactory(processor));
 
-		TServer server = new THsHaServer(args);
+		TServer server = new THsHaServer(arg);
 		server.serve();
 
 	    } catch (TTransportException ex) {
