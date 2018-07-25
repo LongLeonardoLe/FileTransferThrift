@@ -197,22 +197,6 @@ public class FileTransferHandler implements FileTransfer.Iface {
     }
 
     /**
-     * Write the buffer to file
-     *
-     * @param srcPath
-     * @param buffer bytes to be written
-     * @param offset
-     * @throws IOException
-     */
-    public void writeToFile(String srcPath, ByteBuffer buffer, int offset) throws IOException {
-	// Write output to file
-	try (RandomAccessFile writer = new RandomAccessFile(this.headerList.get(srcPath).desPath, "rw")) {
-	    writer.seek(offset * fileTransferConstants.CHUNK_MAX_SIZE);
-            writer.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
-	}
-    }
-
-    /**
      * Check sum of the file given a new data chunk
      *
      * @param srcPath file source path
